@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vogelflugrouten Weltkarte</title>
+    <style> body {padding: 0; margin: 0;} </style>
+    <!-- <script src="libs/p5.min.js"></script> -->
+    <!-- <script src="libs/p5.dom.min.js"></script> -->
+    <!-- <script src="libs/p5.sound.min.js"></script> -->
+    <!-- <script src="MigrationRoute.js"></script> -->
+    <!-- <script src="sketch.js"></script> -->
+    <link rel="stylesheet" href="style.css">
+  </head>
+
+  <body>
+    <div id="gesamteSeite">
+        <div id="linkeSeite">
+
+            <!-- Kartenelement -->
+            <div id="Karte"> 
+                <figure id="map"></figure>
+                <script>
+                    // Hilfsfunktion zum Laden von CSS
+                    function loadCSS(url) {
+                        const link = document.createElement('link');
+                        link.rel = 'stylesheet';
+                        link.href = url;
+                        document.head.appendChild(link);
+                    }
+
+                    // Hilfsfunktion zum Laden von Scripts
+                    function loadScript(url, callback) {
+                        const script = document.createElement('script');
+                        script.src = url;
+                        script.onload = callback;
+                        document.head.appendChild(script);
+                    }
+
+                    // Kartenskript wird nach dem Laden des Scripts ausgeführt
+                    function kartenScript() {
+                        // Welt wird schachbrettartig mit OpenStreetMap-Kacheln (Tiles) dargestellt, Bilder von OpenStreetMap-Servern
+                        var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { // Templatestrings: {s} für Subdomain, {z} für Zoomstufe, {x} und {y} für Kachelkoordinaten
+                            maxZoom: 19,
+                            attribution: 'Map data © <a href="https://www.openstreetmap.org/" target="_blank" rel="noopener">OpenStreetMap</a> and contributors <a href="https://creativecommons.org/licenses/by-sa/2.0/" target="_blank" rel="noopener">CC-BY-SA</a>'
+                        });
+
+                        // legt Kartenbereich an, zeigt den Kartensatz, tap: false lässt am Smartphone zoomen zu
+                        var map = L.map('map', { layers: osm, tap: false });
+                        L.control.scale({imperial:false}).addTo(map); // blendet Maßstab ein, imperial: false zeigt nur metrischen Maßstab an
+
+                        // wählt Kartenausschnitt aus & ist wichtig, damit die Karte angezeigt wird
+                        var bounds = [ [52.6, 13.1], [52.4, 13.7] ];
+                        map.fitBounds( bounds );
+
+                        // skaliert Karte bei Größenänderung neu
+                        map.on("resize", function(e){
+                            map.fitBounds( bounds );
+                        });
+
+                        // mehrere Karten zur Auswahl
+                        // deutsche Version der Openstreetmap
+                        var osmde = L.tileLayer('https://{s}.tile.openstreetmap.de/tiles/osmde/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                        attribution: 'Map data © <a href="https://www.openstreetmap.org/" target="_blank" rel="noopener">OpenStreetMap</a> and contributors <a href="https://creativecommons.org/licenses/by-sa/2.0/" target="_blank" rel="noopener">CC-BY-SA</a>'
+                        });
+
+                        // englische Version der Openstreetmap
+                        // var osmeng = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        // maxZoom: 19,
+                        // attribution: 'Map data © <a href="https://www.openstreetmap.org/" target="_blank" rel="noopener">OpenStreetMap</a> and contributors <a href="https://creativecommons.org/licenses/by-sa/2.0/" target="_blank" rel="noopener">CC-BY-SA</a>'
+                        // });
+
+                        // Open Topo Map
+                        var opentopo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 17,
+                        attribution: 'Kartendaten: © OpenStreetMap-Mitwirkende, SRTM | Kartendarstellung: © <a href="https://opentopomap.org/about">OpenTopoMap</a> (CC-BY-SA)'
+                        });
+
+                        // Satellitenbild
+                        var satellit = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                        maxZoom: 18,
+                        attribution: 'Map data © <a href="http://www.esri.com/">Esri</a>, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+                        });
+
+                        // Kontrollelement, um zwischen den Karten zu wechseln
+                        var baseLayers = {
+                        "OSM": osm,
+                        // "OSMENG": osmeng,
+                        "OSMDE": osmde,
+                        "Open Topo": opentopo,
+                        "Satellit": satellit
+                        };
+                        L.control.layers(baseLayers).addTo(map);
+
+
+                        // Marker hinzufügen, Koordinaten werden als Array übergeben
+                        L.marker([52.45, 13.4]).addTo(map);
+
+                        //Marker mit Pop-up
+                        L.marker([52.55, 13.4]).addTo(map).bindPopup("<b>Hello world!</b>I am a popup.");
+
+                        // Marker mit geöffnetem Pop-up
+                        L.marker([52.65, 13.4]).addTo(map).bindPopup("<b>Hello world!</b>I am a popup.").openPopup();
+
+                        // Marker mit eigenem Icon
+                        var logo = L.icon({
+                        iconUrl: 'S-Logo-vektor.svg',
+                        iconSize: [41, 41],
+                        iconAnchor: [21, 21]
+                        });
+
+                        L.marker([52.5, 13.4], {icon: logo}).addTo(map).on("click",function(event){
+                        console.info(event)
+                        });
+
+
+                        // Linien hinzufügen
+                        // Linie, mit Popup
+                        L.polyline([
+                            [52.4, 13.7],
+                            [52.5, 13.7],
+                            [52.55, 13.6],
+                            [52.5, 13.5],
+                            [52.4, 13.5],
+                            [52.4, 13.7],
+                            [52.5, 13.5],
+                            [52.5, 13.7],
+                            [52.4, 13.5]
+                        ],
+                        {color: "red", weight: 10, opacity: 0.5}
+                        ).addTo(map).bindPopup("Das ist das Haus vom Ni-ko-laus");
+
+                        // Linie mit Mouseover-Effekt
+                        L.polyline([
+                            [52.45, 13.2],
+                            [52.55, 13.3]
+                        ],
+                        {color: "green", weight: 10, opacity: 1}
+                        ).addTo(map)
+                        .on("mouseover", function(e) {
+                        e.sourceTarget.setStyle({color: "red"})
+                        })
+                        .on("mouseout", function(e) {
+                        e.sourceTarget.setStyle({color: "green"})
+                        });
+
+                        // Klick-Event
+                        // Bei Klick auf Karte Koordinaten im Popup anzeigen
+                        // var popup = L.popup();
+                        // map.on("click", function(e) {
+                        // popup
+                        //     .setLatLng(e.latlng)
+                        //     .setContent('<p>'+e.latlng.lat+','+e.latlng.lng+'</p>')
+                        //     .openOn(map);
+                        // });
+                    }
+
+                    // CSS laden
+                    loadCSS("https://unpkg.com/leaflet@1.4.0/dist/leaflet.css");
+
+                    // Leafletscript laden
+                    loadScript("https://unpkg.com/leaflet@1.4.0/dist/leaflet.js", kartenScript);
+                </script>
+
+                
+            </div>
+            <div id="timeline">
+                <h2>Timeline</h2>   
+            </div>
+        </div>
+        <div id="rechteSeite">
+            <div id="speciesFilter">
+                <h3>species filter</h3>
+            </div>
+            <div id="routeFilter">
+                <h3>route filter</h3>
+            </div>
+            <div id="monthFilter">
+                <h3>month filter</h3>
+            </div>
+        </div>
+    </div>
+</html>
