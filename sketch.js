@@ -6,5 +6,6 @@ function preload(){
 }
 
 function setup() {
-
+  let canvas = createCanvas(100, 100);
+  canvas.parent('map-area');
 }

@@ -1,0 +1,103 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: sans-serif;
+  background: #22223b;
+  padding: 20px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+/* Überschrift */
+h1 {
+  margin-bottom: 12px;
+  font-size: 1.4rem;
+}
+
+/* Äußerer Wrapper (alles außer der Überschrift) */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 300px; /* rechte Spalte breiter oder schmäler machen */
+  gap: 20px;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Linke Spalte */
+.left-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 0;
+}
+
+/* Karten-Bereich */
+.map-area {
+  background: #4f5d75;
+  border: none;
+  border-radius: 8px;
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Überschrift in der Karte */
+.search-bar {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #fff;
+}
+
+/* Legende */
+.legend {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  width: 150px;
+  height: 200px;
+  border: none;
+  border-radius: 8px;
+  background: #324a5f;
+}
+
+/* Jahres-Filter */
+.year-filter {
+  background: #4f5d75;
+  border: none;
+  border-radius: 8px;
+  height: 100px;
+}
+
+/* Rechte Spalte (drei Filter-Blöcke) */
+.right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 0;
+}
+
+.filter-block {
+  background: #4f5d75;
+  border: none;
+  border-radius: 8px;
+  flex: 1;
+  min-height: 100px;
+}
+
+/* Beschriftungen der Filter-Blöcke (nur für Entwicklungsphase ->müssen wir später entfernen) */
+.filter-block::after {
+  content: attr(data-label);
+  display: block;
+  padding: 8px;
+  color: #ffffff50;
+  font-size: 0.8rem;
+}

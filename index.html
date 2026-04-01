@@ -5,13 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vogelflugrouten Weltkarte</title>
     <style> body {padding: 0; margin: 0;} </style>
-    <script src="libs/p5.min.js"></script>
-    <script src="libs/p5.dom.min.js"></script>
-    <script src="libs/p5.sound.min.js"></script>
-    <script src="MigrationRoute.js"></script>
-    <script src="sketch.js"></script>
+    <link rel="stylesheet" href="style.css">
   </head>
   <body>
-    <p>Test</p>
-  </body>
+
+  <div class="layout">
+    <div class="left-col">
+      <div class="map-area" id="map-area">
+          <div class="search-bar"></div>
+          <div class="legend"></div>
+      </div>
+      <div class="search-bar">Überschrift</div>
+      <div class="year-filter"></div>
+    </div>
+ 
+    <div class="right-col">
+      <div class="filter-block" data-label="Vogel Filter"></div>
+      <div class="filter-block" data-label="Orte Filter"></div>
+      <div class="filter-block" data-label="Monat Filter"></div>
+    </div>
+  </div>
+
+  <script src="libs/p5.min.js"></script>
+  <script src="libs/p5.dom.min.js"></script>
+  <script src="libs/p5.sound.min.js"></script>
+  <script src="MigrationRoute.js"></script>
+  <script src="sketch.js"></script>
+
+</body>
 </html>
