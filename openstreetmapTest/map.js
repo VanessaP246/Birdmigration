@@ -1,0 +1,2 @@
+// Seite mit Leaflet.js und OpenStreetMap
+var map = L.map('map').setView([51.505, -0.09], 13);
