@@ -91,13 +91,10 @@ h1 {
   border-radius: 8px;
   flex: 1;
   min-height: 100px;
+  /* Abstand zum Kachelrand */
+  padding: 12px;
+  position: relative;
+  overflow: hidden;
 }
 
-/* Beschriftungen der Filter-Blöcke (nur für Entwicklungsphase ->müssen wir später entfernen) */
-.filter-block::after {
-  content: attr(data-label);
-  display: block;
-  padding: 8px;
-  color: #ffffff50;
-  font-size: 0.8rem;
-}
+/* Beschriftungen der Filter-Blöcke hab ich entfernt
