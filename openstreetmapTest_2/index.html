@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vogelflugrouten Weltkarte</title>
+    <style> body {padding: 0; margin: 0;} </style>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet"/>
+  </head>
+
+  <body>
+    <div id="gesamteSeite">
+        <div id="linkeSeite">
+
+            <!-- Kartenelement -->
+            <div id="Karte"> 
+                <div id="map" style="width:100%; height:100%;"></div>
+                <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
+                <script>
+                    new maplibregl.Map({
+                        container: 'map',
+                        style: 'style.json',            // exportierte Datei aus maputnik als json
+                        center: [9.7979, 48.7988],      // [Längengrad, Breitengrad]
+                        zoom: 0
+                    });
+                </script>
+            </div>
+            <div id="timeline">
+                <h2>Timeline</h2>   
+            </div>
+        </div>
+        <div id="rechteSeite">
+            <div id="speciesFilter">
+                <h3>species filter</h3>
+            </div>
+            <div id="routeFilter">
+                <h3>route filter</h3>
+            </div>
+            <div id="monthFilter">
+                <h3>month filter</h3>
+            </div>
+        </div>
+    </div>
+  </body>
+</html>
