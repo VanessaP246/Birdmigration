@@ -6,7 +6,7 @@
 
 body {
   font-family: sans-serif;
-  background: #22223b;
+  background: #0F1115;
   padding: 20px;
   height: 100vh;
   display: flex;
@@ -39,7 +39,7 @@ h1 {
 
 /* Karten-Bereich */
 .map-area {
-  background: #4f5d75;
+  background: #1A1D22;
   border: none;
   border-radius: 8px;
   position: relative;
@@ -66,12 +66,12 @@ h1 {
   height: 200px;
   border: none;
   border-radius: 8px;
-  background: #324a5f;
+  background: #ffffff50;
 }
 
 /* Jahres-Filter */
 .year-filter {
-  background: #4f5d75;
+  background: #1A1D22;
   border: none;
   border-radius: 8px;
   height: 100px;
@@ -86,7 +86,7 @@ h1 {
 }
 
 .filter-block {
-  background: #4f5d75;
+  background: #1A1D22;
   border: none;
   border-radius: 8px;
   flex: 1;
