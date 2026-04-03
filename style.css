@@ -42,6 +42,7 @@ h1 {
   background: #1A1D22;
   border: none;
   border-radius: 8px;
+  overflow: hidden; /* WICHTIG: sonst überlappt die Map die Ecken */
   position: relative;
   flex: 1;
   min-height: 0;
