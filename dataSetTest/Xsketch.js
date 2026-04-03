@@ -18,8 +18,8 @@ let maxJahrSelected = 2024;
 
 function preload(){
     // CSV-Datei als Text laden um manuell zu parsen
-    csvRohtext = loadStrings('data/Bird migration dataset.csv');
-    backgroundImage = loadImage('data/mapaMundi1800x600.png');
+    csvRohtext = loadStrings('../data/Bird migration dataset.csv');
+    backgroundImage = loadImage('../data/mapaMundi1800x600.png');
 }
 
 
