@@ -15,16 +15,44 @@
 
             <!-- Kartenelement -->
             <div id="Karte"> 
-                <div id="map" style="width:100%; height:100%;"></div>
-                <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
-                <script>
-                    new maplibregl.Map({
-                        container: 'map',
-                        style: 'style.json',            // exportierte Datei aus maputnik als json
-                        center: [9.7979, 48.7988],      // [Längengrad, Breitengrad]
-                        zoom: 0
-                    });
-                </script>
+                <button onclick="setStyle('custom')">🗺️ Karte</button>
+<button onclick="setStyle('satellite')">🛰️ Satellit</button>
+
+<div id="map" style="width:100%; height:100%;"></div>
+
+<script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
+<script>
+  const styles = {
+    custom: 'style.json',           // dein Maputnik-Export
+    satellite: {
+      version: 8,
+      sources: {
+        esri: {
+          type: 'raster',
+          tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+          tileSize: 256,
+          attribution: '© Esri, Maxar, Earthstar Geographics'
+        }
+      },
+      layers: [{
+        id: 'satellite',
+        type: 'raster',
+        source: 'esri'
+      }]
+    }
+  };
+
+  const map = new maplibregl.Map({
+    container: 'map',
+    style: styles.custom,
+    center: [9.7979, 48.7988],
+    zoom: 13
+  });
+
+  function setStyle(name) {
+    map.setStyle(styles[name]);
+  }
+</script>
             </div>
             <div id="timeline">
                 <h2>Timeline</h2>   
