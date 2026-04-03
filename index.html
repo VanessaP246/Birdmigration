@@ -12,18 +12,58 @@
   <div class="layout">
     <div class="left-col">
       <div class="map-area" id="map-area">
+        <!-- Maputnik-Karte & Satellienkarte -->
         <link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet"/>
         <div id="map" style="width:100%; height:100%;"></div>
         <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
         <script>
-          new maplibregl.Map({
-            container: 'map',    
-            style: 'mapStyle_darkmode.json',            // Jason aus maputnik    
-            center: [9.7979, 48.7988],      // [Längengrad, Breitengrad]    
-            zoom: 0  });
+          const styles = {
+            custom: 'mapStyle_darkmode.json', // Maputnik-Export (Vektorkarte)
+            satellite: {
+              version: 8,
+              sources: {
+                esri: {
+                  type: 'raster',
+                  tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+                  tileSize: 256,
+                  attribution: '© Esri, Maxar, Earthstar Geographics'
+                }
+              },
+              layers: [{
+                id: 'satellite',
+                type: 'raster',
+                source: 'esri'
+              }]
+            }
+          };
+
+          const map = new maplibregl.Map({
+            container: 'map',
+            style: styles.custom,
+            center: [13.3777, 52.5162], // Koordinaten von Berlin
+            zoom: 0
+          });
+
+          function setStyle(name) {
+            map.setStyle(styles[name]);
+          }
         </script>
-          <div class="search-bar"></div>
-          <div class="legend"></div>
+
+        <div class="search-bar"></div>
+        <div class="legend">
+          <!-- Radio-Buttons zum Umschalten zwischen den Karten -->
+          <fieldset>
+            <legend>Select a map style:</legend>
+            <div>
+              <input type="radio" id="custom" name="map style" value="custom" checked onclick="setStyle('custom')" />                
+              <label for="custom">minimalistic map</label>
+            </div>
+            <div>
+              <input type="radio" id="satellite" name="map style" value="satellite" onclick="setStyle('satellite')" />
+              <label for="satellite">satellite map</label>
+            </div>
+          </fieldset>
+        </div>
       </div>
       <div class="search-bar">Überschrift</div>
       <div class="year-filter"></div>
