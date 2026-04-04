@@ -413,6 +413,9 @@ function buildLegend() {
   // Checkbox-Listener anhängen
   const cb = document.getElementById('hide-stops-checkbox');
   if (cb) {
+    // Checkbox Farbe
+    try { cb.style.cssText = 'accent-color: #3A5D53; cursor: pointer;'; } catch (e) {}
+
     cb.addEventListener('change', function() {
       hideStops = !!this.checked;
       // Neu aufbauen / aktualisieren
