@@ -109,47 +109,53 @@ function initYearFilter() {
   labelRow.appendChild(bubbleTo);
 
   // Zeichnen & Events
-  function render() {
-    const w = sliderWrap.offsetWidth;
-    const fromPct = (yearFrom - YEAR_MIN) / (YEAR_MAX - YEAR_MIN);
-    const toPct   = (yearTo   - YEAR_MIN) / (YEAR_MAX - YEAR_MIN);
+function render() {
+  const w = sliderWrap.offsetWidth;
+  const fromPct = (yearFrom - YEAR_MIN) / (YEAR_MAX - YEAR_MIN);
+  const toPct   = (yearTo   - YEAR_MIN) / (YEAR_MAX - YEAR_MIN);
 
-    // Zeiger positionieren
-    setThumb(thumbFrom, fromPct);
-    setThumb(thumbTo,   toPct);
+  setThumb(thumbFrom, fromPct);
+  setThumb(thumbTo,   toPct);
 
-    // Füllung
-    if (rangeMode) {
-      fill.style.left  = (fromPct * 100) + '%';
-      fill.style.width = ((toPct - fromPct) * 100) + '%';
-    } else {
-      fill.style.left  = '0%';
-      fill.style.width = (fromPct * 100) + '%';
-    }
-
-    // Rechter Zeiger nur im Zeitspannen-Modus sichtbar
-    thumbTo.style.opacity        = rangeMode ? '1' : '0';
-    thumbTo.style.pointerEvents  = rangeMode ? 'auto' : 'none';
-
-    // Bubbles positionieren
-    // Bubble "from": zentriert unter dem Zeiger, aber nicht über Ränder
-    const bFromLeft = clamp(fromPct * 100, 3, 90);
-    bubbleFrom.style.left = bFromLeft + '%';
-    bubbleFrom.style.transform = 'translateX(-50%)';
-    bubbleFrom.textContent = yearFrom;
-
-    // Bubble "to" nur im Zeitspannen-Modus
-    if (rangeMode) {
-      const bToLeft = clamp(toPct * 100, 10, 97);
-      bubbleTo.style.left = bToLeft + '%';
-      bubbleTo.style.transform = 'translateX(-50%)';
-      bubbleTo.textContent = yearTo;
-      bubbleTo.style.opacity = '1';
-    } else {
-      bubbleTo.style.opacity = '0';
-    }
+  if (rangeMode) {
+    fill.style.left  = (fromPct * 100) + '%';
+    fill.style.width = ((toPct - fromPct) * 100) + '%';
+  } else {
+    fill.style.left  = '0%';
+    fill.style.width = (fromPct * 100) + '%';
   }
 
+  thumbTo.style.opacity       = rangeMode ? '1' : '0';
+  thumbTo.style.pointerEvents = rangeMode ? 'auto' : 'none';
+
+  // Bubble "from": ausblenden wenn auf Min oder Max
+  const fromIsExtreme = (yearFrom === YEAR_MIN || yearFrom === YEAR_MAX);
+  bubbleFrom.style.opacity = fromIsExtreme ? '0' : '1';
+  if (!fromIsExtreme) {
+    const bFromLeft = clamp(fromPct * 100, 3, 90);
+    bubbleFrom.style.left      = bFromLeft + '%';
+    bubbleFrom.style.transform = 'translateX(-50%)';
+    bubbleFrom.textContent     = yearFrom;
+  }
+
+  // Bubble "to": ausblenden wenn auf Min oder Max
+  if (rangeMode) {
+    const toIsExtreme = (yearTo === YEAR_MIN || yearTo === YEAR_MAX);
+    bubbleTo.style.opacity = toIsExtreme ? '0' : '1';
+    if (!toIsExtreme) {
+      const bToLeft = clamp(toPct * 100, 10, 97);
+      bubbleTo.style.left      = bToLeft + '%';
+      bubbleTo.style.transform = 'translateX(-50%)';
+      bubbleTo.textContent     = yearTo;
+    }
+  } else {
+    bubbleTo.style.opacity = '0';
+  }
+
+  // Extrem-Labels fett wenn Zeiger drauf steht
+  labelMin.style.fontWeight = (yearFrom === YEAR_MIN || (rangeMode && yearTo === YEAR_MIN)) ? 'bold' : 'normal';
+  labelMax.style.fontWeight = (yearFrom === YEAR_MAX || (rangeMode && yearTo === YEAR_MAX)) ? 'bold' : 'normal';
+}
   // Drag-Logik für einen Zeiger
   function makeDraggable(thumb, isTo) {
     let dragging = false;
