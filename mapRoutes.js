@@ -23,6 +23,8 @@ const POINT_RADIUS      = 4;   // Kreis-Radius
 // Globaler Zustand
 let allRoutes    = [];
 let activeFilters = []; // Array von aktiven Filtern statt nur eines
+let yearFilterFrom = null; // null = kein Jahresfilter aktiv
+let yearFilterTo   = null;
 let selectedRoute = null; // code der aktuell angeklickten Route
 let selectedRouteData = null; // vollständiges Route-Objekt der angeklickten Route
 let mapReady     = false;
@@ -254,9 +256,6 @@ function updateFixedTooltipPosition() {
   // Geo-Koordinaten → Pixel
   const px = map.project(selectedRoute_lngLat);
 
-  // Pixel → Bildschirmkoordinaten (map-div Position addieren)
-  // Since the tooltip is appended to the map container, set coordinates
-  // relative to the container's top-left.
   fixedTooltip.style.left = (px.x + 14) + 'px';
   fixedTooltip.style.top  = (px.y - 10) + 'px';
 }
@@ -290,25 +289,24 @@ function buildTooltipHTML(props) {
   `;
 }
 
-// Sichtbare Routen je nach Filter
 function getVisibleRoutes() {
-  if (activeFilters.length === 0) return allRoutes;
-  
   return allRoutes.filter(r => {
-    // Route muss ALLE Filter erfüllen
-    return activeFilters.every(filter => {
-      switch (filter.type) {
-        case 'order':   return r.order   === filter.name;
-        case 'family':  return r.family  === filter.name;
-        case 'genus':   return r.genus   === filter.name;
-        case 'species': return r.species === filter.name;
-        case 'months':  
-          const startMonth = parseInt(r.month);
-          const endMonth = parseInt(r.endMonth);
-          return startMonth === filter.startMonth && endMonth === filter.endMonth;
-        default:        return true;
+    // Vogelfilter
+    if (activeFilters && activeFilters.length > 0) {
+      const f = activeFilters[0]; // ersten Filter nehmen
+      switch (f.type) {
+        case 'order':   if (r.order   !== f.name) return false; break;
+        case 'family':  if (r.family  !== f.name) return false; break;
+        case 'genus':   if (r.genus   !== f.name) return false; break;
+        case 'species': if (r.species !== f.name) return false; break;
       }
-    });
+    }
+    // Jahresfilter
+    if (yearFilterFrom !== null && yearFilterTo !== null) {
+      const y = parseInt(r.year);
+      if (isNaN(y) || y < yearFilterFrom || y > yearFilterTo) return false;
+    }
+    return true;
   });
 }
 
@@ -338,27 +336,17 @@ function parseRoutes(table) {
   return Object.values(routeMap);
 }
 
-// Filter-Schnittstelle (von birdFilter.js aufgerufen)
 function filterRoutes(name, depth) {
   if (!name) {
-    // Alle Bird-Filter löschen, aber Monats-Filter behalten
-    activeFilters = activeFilters.filter(f => f.type !== 'order' && f.type !== 'family' && f.type !== 'genus' && f.type !== 'species');
+    activeFilters = [];
   } else {
     const typeMap = { 1: 'order', 2: 'family', 3: 'genus', 4: 'species' };
-    const filterType = typeMap[depth];
-    
-    // Existierenden Filter desselben Typs entfernen
-    activeFilters = activeFilters.filter(f => f.type !== filterType);
-    
-    // Neuen Filter hinzufügen
-    activeFilters.push({ type: filterType, name });
+    activeFilters = [{ type: typeMap[depth], name }];
   }
-  // Auswahl und Tooltip zurücksetzen wenn Filter wechselt
   selectedRoute        = null;
   selectedRouteData    = null;
   selectedRoute_lngLat = null;
   fixedTooltip.style.opacity = '0';
-
   buildLayers();
 }
 
@@ -432,6 +420,17 @@ function buildLegend() {
       applySelectionStyle();
     });
   }
+}
+
+// Wird von yearFilter.js aufgerufen
+function filterRoutesByYear(from, to) {
+  yearFilterFrom = from;
+  yearFilterTo   = to;
+  selectedRoute        = null;
+  selectedRouteData    = null;
+  selectedRoute_lngLat = null;
+  fixedTooltip.style.opacity = '0';
+  buildLayers();
 }
 
 window.addEventListener('load', buildLegend);
