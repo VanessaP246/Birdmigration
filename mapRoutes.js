@@ -22,7 +22,7 @@ const POINT_RADIUS      = 4;   // Kreis-Radius
 
 // Globaler Zustand
 let allRoutes    = [];
-let activeFilter = null;
+let activeFilters = []; // Array von aktiven Filtern statt nur eines
 let selectedRoute = null; // code der aktuell angeklickten Route
 let selectedRouteData = null; // vollständiges Route-Objekt der angeklickten Route
 let mapReady     = false;
@@ -288,15 +288,23 @@ function buildTooltipHTML(props) {
 
 // Sichtbare Routen je nach Filter
 function getVisibleRoutes() {
-  if (!activeFilter) return allRoutes;
+  if (activeFilters.length === 0) return allRoutes;
+  
   return allRoutes.filter(r => {
-    switch (activeFilter.type) {
-      case 'order':   return r.order   === activeFilter.name;
-      case 'family':  return r.family  === activeFilter.name;
-      case 'genus':   return r.genus   === activeFilter.name;
-      case 'species': return r.species === activeFilter.name;
-      default:        return true;
-    }
+    // Route muss ALLE Filter erfüllen
+    return activeFilters.every(filter => {
+      switch (filter.type) {
+        case 'order':   return r.order   === filter.name;
+        case 'family':  return r.family  === filter.name;
+        case 'genus':   return r.genus   === filter.name;
+        case 'species': return r.species === filter.name;
+        case 'months':  
+          const startMonth = parseInt(r.month);
+          const endMonth = parseInt(r.endMonth);
+          return startMonth === filter.startMonth && endMonth === filter.endMonth;
+        default:        return true;
+      }
+    });
   });
 }
 
@@ -312,13 +320,14 @@ function parseRoutes(table) {
     const genus   = table.getString(i, 'Bird genera').trim();
     const rl      = table.getString(i, 'The IUCN Red List (2023)').trim();
     const month   = table.getString(i, 'Migration start month').trim();
+    const endMonth = table.getString(i, 'Migration end month').trim();
     const year    = table.getString(i, 'Migration start year').trim();
     const country = table.getString(i, 'Countries').trim();
     const lon = parseFloat(table.getString(i, 'GPS_xx').replace(',', '.'));
     const lat = parseFloat(table.getString(i, 'GPS_yy').replace(',', '.'));
     if (!code || isNaN(lon) || isNaN(lat)) continue;
     if (!routeMap[code]) {
-      routeMap[code] = { code, species, order, family, genus, rl, month, year, country, points: [] };
+      routeMap[code] = { code, species, order, family, genus, rl, month, endMonth, year, country, points: [] };
     }
     routeMap[code].points.push({ lon, lat, node });
   }
@@ -328,10 +337,17 @@ function parseRoutes(table) {
 // Filter-Schnittstelle (von birdFilter.js aufgerufen)
 function filterRoutes(name, depth) {
   if (!name) {
-    activeFilter = null;
+    // Alle Bird-Filter löschen, aber Monats-Filter behalten
+    activeFilters = activeFilters.filter(f => f.type !== 'order' && f.type !== 'family' && f.type !== 'genus' && f.type !== 'species');
   } else {
     const typeMap = { 1: 'order', 2: 'family', 3: 'genus', 4: 'species' };
-    activeFilter = { type: typeMap[depth], name };
+    const filterType = typeMap[depth];
+    
+    // Existierenden Filter desselben Typs entfernen
+    activeFilters = activeFilters.filter(f => f.type !== filterType);
+    
+    // Neuen Filter hinzufügen
+    activeFilters.push({ type: filterType, name });
   }
   // Auswahl und Tooltip zurücksetzen wenn Filter wechselt
   selectedRoute        = null;
@@ -339,6 +355,47 @@ function filterRoutes(name, depth) {
   selectedRoute_lngLat = null;
   fixedTooltip.style.opacity = '0';
 
+  buildLayers();
+}
+
+// Filter nach Migrations-Monaten (von monthFilter.js aufgerufen)
+function filterRoutesByMonths(startMonth, endMonth) {
+  if (startMonth === null || endMonth === null) {
+    // Monats-Filter löschen, aber andere Filter behalten
+    activeFilters = activeFilters.filter(f => f.type !== 'months');
+  } else {
+    // Existierenden Monats-Filter entfernen
+    activeFilters = activeFilters.filter(f => f.type !== 'months');
+    
+    // Neuen Filter hinzufügen
+    activeFilters.push({ type: 'months', startMonth, endMonth });
+  }
+  // Auswahl und Tooltip zurücksetzen wenn Filter wechselt
+  selectedRoute        = null;
+  selectedRouteData    = null;
+  selectedRoute_lngLat = null;
+  fixedTooltip.style.opacity = '0';
+
+  buildLayers();
+}
+
+// Aktuellen Status aller Filter abrufen
+function getActiveFilters() {
+  return activeFilters;
+}
+
+// Prüfen ob ein bestimmter Filter-Typ aktiv ist
+function getFilterByType(type) {
+  return activeFilters.find(f => f.type === type) || null;
+}
+
+// Alle Filter löschen
+function clearAllFilters() {
+  activeFilters = [];
+  selectedRoute = null;
+  selectedRouteData = null;
+  selectedRoute_lngLat = null;
+  fixedTooltip.style.opacity = '0';
   buildLayers();
 }
 

@@ -29,6 +29,11 @@ function setup() {
     const parsed = parseSemicolonCSV(csvRohtext);
     console.log('Spalten:', parsed.columns);
     initMapRoutes(parsed);
+    
+    // Initialize chord diagram with parsed CSV
+    if (typeof onCSVParsed === 'function') {
+      onCSVParsed(parsed);
+    }
 
     // DEBUG - nach 1 Sekunde ausgeben
 setTimeout(() => {
