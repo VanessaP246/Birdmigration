@@ -37,15 +37,31 @@ h1 {
   min-height: 0;
 }
 
-/* Karten-Bereich */
 .map-area {
   background: #1A1D22;
   border: none;
   border-radius: 8px;
-  overflow: hidden; /* WICHTIG: sonst überlappt die Map die Ecken */
+  overflow: hidden; /* wichtig: verhindert, dass die Map über die abgerundeten Ecken hinausragt */
   position: relative;
   flex: 1;
   min-height: 0;
+}
+
+/* Map-Container und Map-Canvas ebenfalls runden, damit die Kachel-Ecken konsistent sind */
+#map,
+#map canvas,
+.maplibregl-canvas,
+.map-area > #map {
+  border-radius: 8px;
+  display: block;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 /* Überschrift in der Karte */
