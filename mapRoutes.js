@@ -31,23 +31,23 @@ let mapReady     = false;
 // Hover-Tooltip (folgt der Maus)
 const hoverTooltip = document.createElement('div');
 Object.assign(hoverTooltip.style, {
-  position: 'fixed', background: 'rgba(50,50,60,0.92)', color: '#fff',
+  position: 'absolute', background: 'rgba(50,50,60,0.92)', color: '#fff',
   borderRadius: '6px', padding: '8px 12px', fontSize: '0.75rem',
-  pointerEvents: 'none', opacity: '0', maxWidth: '200px',
+  pointerEvents: 'none', opacity: '0',
+  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'clip',
   lineHeight: '1.5', zIndex: '1001', transition: 'opacity 0.15s',
 });
-document.body.appendChild(hoverTooltip);
 
 // Fixiertes Tooltip (bleibt nach Klick, bewegt sich mit Karte/Zoom)
 const fixedTooltip = document.createElement('div');
 Object.assign(fixedTooltip.style, {
-  position: 'fixed', background: 'rgba(50,50,60,0.92)', color: '#fff',
+  position: 'absolute', background: 'rgba(50,50,60,0.92)', color: '#fff',
   borderRadius: '6px', padding: '8px 12px', fontSize: '0.75rem',
-  pointerEvents: 'none', opacity: '0', maxWidth: '200px',
+  pointerEvents: 'none', opacity: '0',
+  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'clip',
   lineHeight: '1.5', zIndex: '1000', transition: 'opacity 0.15s',
   border: '1px solid rgba(255,255,255,0.3)',
 });
-document.body.appendChild(fixedTooltip);
 
 // Einstiegspunkt
 function initMapRoutes(csvTable) {
@@ -78,6 +78,17 @@ function onMapReady() {
   // Fixiertes Tooltip mitbewegen wenn Karte bewegt oder gezoomt wird
   map.on('move', updateFixedTooltipPosition);
   map.on('zoom', updateFixedTooltipPosition);
+
+  try {
+    const mc = map.getContainer();
+    if (mc) {
+      const cs = window.getComputedStyle(mc);
+      if (cs.position === 'static') mc.style.position = 'relative';
+      if (hoverTooltip && !mc.contains(hoverTooltip)) mc.appendChild(hoverTooltip);
+      if (fixedTooltip && !mc.contains(fixedTooltip)) mc.appendChild(fixedTooltip);
+    }
+  } catch (e) {
+  }
 }
 
 // GeoJSON-Layer aufbauen
@@ -151,7 +162,6 @@ function registerInteraction() {
   map.on('mousemove', 'route-lines-hitbox', function(e) {
     map.getCanvas().style.cursor = 'pointer';
     const props = e.features[0].properties;
-
     map.setPaintProperty('route-lines', 'line-width', [
       'case',
       ['==', ['get', 'code'], selectedRoute || ''], LINE_WIDTH_HOVER,
@@ -161,9 +171,13 @@ function registerInteraction() {
 
     // Hover-Tooltip zeigen – aber nicht wenn es dieselbe Route wie die fixierte ist
     if (props.code !== selectedRoute) {
-      hoverTooltip.innerHTML   = buildTooltipHTML(props);
-      hoverTooltip.style.left  = (e.originalEvent.clientX + 14) + 'px';
-      hoverTooltip.style.top   = (e.originalEvent.clientY - 10) + 'px';
+      hoverTooltip.innerHTML = buildTooltipHTML(props);
+      // Position relativ zum Map-Container
+      const mapRect = map.getContainer().getBoundingClientRect();
+      const relX = e.originalEvent.clientX - mapRect.left;
+      const relY = e.originalEvent.clientY - mapRect.top;
+      hoverTooltip.style.left = (relX + 14) + 'px';
+      hoverTooltip.style.top  = (relY - 10) + 'px';
       hoverTooltip.style.opacity = '1';
     }
   });
@@ -192,10 +206,14 @@ function registerInteraction() {
       selectedRouteData = allRoutes.find(r => r.code === code) || null;
 
       // Fixiertes Tooltip an Klick-Position setzen
-      fixedTooltip.innerHTML   = buildTooltipHTML(props);
-      fixedTooltip.style.left  = (e.originalEvent.clientX + 14) + 'px';
-      fixedTooltip.style.top   = (e.originalEvent.clientY - 10) + 'px';
-      fixedTooltip.style.opacity = '1';
+  fixedTooltip.innerHTML = buildTooltipHTML(props);
+  // Position relativ zum Map-Container
+  const mapRect = map.getContainer().getBoundingClientRect();
+  const relX = e.originalEvent.clientX - mapRect.left;
+  const relY = e.originalEvent.clientY - mapRect.top;
+  fixedTooltip.style.left = (relX + 14) + 'px';
+  fixedTooltip.style.top  = (relY - 10) + 'px';
+  fixedTooltip.style.opacity = '1';
 
       // Geografische Position merken damit Tooltip beim Zoomen/Bewegen folgt
       if (selectedRouteData) {
@@ -233,12 +251,10 @@ function updateFixedTooltipPosition() {
   const px = map.project(selectedRoute_lngLat);
 
   // Pixel → Bildschirmkoordinaten (map-div Position addieren)
-  const mapRect = document.getElementById('map').getBoundingClientRect();
-  const screenX = mapRect.left + px.x + 14;
-  const screenY = mapRect.top  + px.y - 10;
-
-  fixedTooltip.style.left = screenX + 'px';
-  fixedTooltip.style.top  = screenY + 'px';
+  // Since the tooltip is appended to the map container, set coordinates
+  // relative to the container's top-left.
+  fixedTooltip.style.left = (px.x + 14) + 'px';
+  fixedTooltip.style.top  = (px.y - 10) + 'px';
 }
 
 // Linienbreite je nach Auswahl setzen
