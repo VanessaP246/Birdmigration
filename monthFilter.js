@@ -113,7 +113,9 @@ function drawmonthFilter(container, connections) {
   // Container-Größe verwenden (CSS stellt sicher, dass sie richtig ist)
   const width = container.clientWidth;
   const height = container.clientHeight;
-  const radius = Math.min(width, height) / 2 - 40; // Platz für Labels lassen
+  const nodeRadius = 12; // Radius der Node-Kreise
+  const padding = 12; // Gewünschter Abstand zum Rand
+  const radius = Math.min(width, height) / 2 - nodeRadius - padding; // Platz für Nodes lassen
   const centerX = width / 2;
   const centerY = height / 2;
   
@@ -149,9 +151,9 @@ function drawmonthFilter(container, connections) {
     const source = nodePositions[conn.source];
     const target = nodePositions[conn.target];
     
-    // Deckkrafft basierend auf Wet berechnen
-    const opacity = 0.2 + (conn.value / maxValue) * 0.5; // Range from 0.2 to 0.7
-    const strokeWidth = 0.6 + (conn.value / maxValue) * 1.5; // Range from 0.6 to 2.1
+    // Pfadeigenschaften
+    const opacity = 0.2 + (conn.value / maxValue) * 0.5; // Pfaddeckkraft, Spanne von 0.2 to 0.7
+    const strokeWidth = 1.2 + (conn.value / maxValue) * 3; // Pfadbreite, Spanne von 1.2 to 4.2
     
     // Bezier-Kurve zw. den nodes berechnen (mit Quadratfunktion)
     const midX = (source.x + target.x) / 2;
@@ -234,16 +236,16 @@ function drawmonthFilter(container, connections) {
     .each(function(d, i) {
       // Hauptkreis
       d3.select(this).append('circle')
-        .attr('r', 12)
+        .attr('r', 14)
         .attr('fill', MONTH_COLORS[i])
-        .attr('stroke', '#fff')
-        .attr('stroke-width', 2)
-        .attr('opacity', 0.9);
+        // .attr('stroke', '#fff')
+        // .attr('stroke-width', 2)
+        // .attr('opacity', 0.9);
       
       // Nummern im Kreis
       d3.select(this).append('text')
         .attr('x', 0)
-        .attr('y', 0)
+        .attr('y', 1)
         .attr('text-anchor', 'middle')
         .attr('dominant-baseline', 'middle')
         .attr('font-size', '14px')
