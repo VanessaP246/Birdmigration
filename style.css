@@ -79,8 +79,10 @@ h1 {
   position: absolute;
   bottom: 14px;
   left: 14px;
-  width: 150px;
-  height: 200px;
+  width: 190px; 
+  height: auto;
+  max-height: calc(100% - 28px);
+  overflow-y: auto;
   border: none;
   border-radius: 8px;
   background: #ffffff50;
