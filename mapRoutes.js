@@ -26,6 +26,8 @@ let activeFilter = null;
 let selectedRoute = null; // code der aktuell angeklickten Route
 let selectedRouteData = null; // vollständiges Route-Objekt der angeklickten Route
 let mapReady     = false;
+// Option: Zwischenstopps ausblenden (nur Origin/Destination zeigen)
+let hideStops = false;
 
 // Tooltips/Infobox
 // Hover-Tooltip (folgt der Maus)
@@ -108,6 +110,8 @@ function buildLayers() {
   const pointFeatures = [];
   for (const r of visible) {
     for (const pt of r.points) {
+      // Wenn hideStops aktiviert ist, nur Start- und Endpunkte anzeigen
+      if (hideStops && pt.node !== 'Origin' && pt.node !== 'Destination') continue;
       pointFeatures.push({
         type: 'Feature',
         properties: {
@@ -354,11 +358,23 @@ function buildLegend() {
       `<div><span style="display:inline-block;width:10px;height:10px;background:${color};border-radius:2px;margin-right:5px"></span>${label}</div>`
     ).join('')}
     <div style="font-weight:bold;margin-top:8px;margin-bottom:4px">Punkte</div>
+    <div style="margin-bottom:6px"><label><input type="checkbox" id="hide-stops-checkbox" ${hideStops ? 'checked' : ''}/> Zwischenstopps ausblenden</label></div>
     <div>▲ Startpunkt</div>
     <div>● Zwischenstopp</div>
     <div>✕ Endpunkt</div>
   `;
   legend.appendChild(div);
+
+  // Checkbox-Listener anhängen
+  const cb = document.getElementById('hide-stops-checkbox');
+  if (cb) {
+    cb.addEventListener('change', function() {
+      hideStops = !!this.checked;
+      // Neu aufbauen / aktualisieren
+      try { buildLayers(); } catch (e) {}
+      applySelectionStyle();
+    });
+  }
 }
 
 window.addEventListener('load', buildLegend);
