@@ -45,9 +45,21 @@
             zoom: 0
           });
 
+          // Kartensteuerung als Buttons (Positionen: 'top-right', 'top-left', 'bottom-right', 'bottom-left')
+          map.addControl(new maplibregl.NavigationControl({
+          showCompass: false // Kompass zum gerade Aurichten nicht anzeigen
+          }));
+          
           function setStyle(name) {
             map.setStyle(styles[name]);
           }
+
+          // Kartenrotierung mit rechtsklick + ziehen deaktivieren
+          map.dragRotate.disable();
+          // Kartenrotierung mit Tastatur deaktivieren
+          map.keyboard.disable();
+          // Kartenrotierung mit Touchgesten deaktivieren
+          map.touchZoomRotate.disableRotation();
         </script>
 
         <div class="search-bar"></div>
