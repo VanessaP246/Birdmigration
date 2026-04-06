@@ -87,7 +87,29 @@ h1 {
   border-radius: 8px;
   background: #ffffff50;
   padding: 10px;
+  color: #fff;
+  font-family: sans-serif;
   font-size: 0.8rem;
+}
+
+/* Radio Buttons für Wechsel zw. Kartenart */
+.mapStyle {
+  appearance: none;
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+
+  border: 2px solid #ffffffcb;
+  transition: 0.2s all linear;
+  margin-right: 5px;
+
+  position: relative;
+  top: 4px;
+}
+
+.mapStyle:checked {
+  border: 5px solid rgb(255, 255, 255);
+  /* background: rgb(255, 255, 255); */
 }
 
 /* Jahres-Filter */

@@ -65,17 +65,18 @@
         <div class="search-bar"></div>
         <div class="legend">
           <!-- Radio-Buttons zum Umschalten zwischen den Karten -->
-          <fieldset>
-            <legend>Select a map style:</legend>
+          <!-- <fieldset> -->
+            <!-- <legend>Select a map style:</legend> -->
+             <p style="font-weight:bold;margin-bottom:4px">Map Style</p>
             <div>
-              <input type="radio" id="custom" name="map style" value="custom" checked onclick="setStyle('custom')" />                
+              <input type="radio" class="mapStyle" name="map style" value="custom" checked onclick="setStyle('custom')" />                
               <label for="custom">minimalistic map</label>
             </div>
             <div>
-              <input type="radio" id="satellite" name="map style" value="satellite" onclick="setStyle('satellite')" />
+              <input type="radio" class="mapStyle" name="map style" value="satellite" onclick="setStyle('satellite')" />
               <label for="satellite">satellite map</label>
             </div>
-          </fieldset>
+          <!-- </fieldset> -->
         </div>
       </div>
       <div class="search-bar">Bird Migration</div>

@@ -275,8 +275,13 @@ function applySelectionStyle() {
     ['==', ['get', 'code'], selectedRoute || ''], 1.0,
     selectedRoute ? 0.35 : 0.7  // andere Routen abdunkeln wenn eine ausgewählt ist
   ]);
-}
 
+  // Chord-Diagramm mit gefilterten Verbindungen aktualisieren
+  if (typeof updateMonthFilterConnections === 'function') {
+    const connections = getVisibleMonthConnections();
+    updateMonthFilterConnections(connections);
+  }
+}
 // Tooltip HTML
 function buildTooltipHTML(props) {
   const rlColor = RL_LINE_COLOR[props.rl] || '#fff';
@@ -291,17 +296,29 @@ function buildTooltipHTML(props) {
 
 function getVisibleRoutes() {
   return allRoutes.filter(r => {
-    // Vogelfilter
-    if (activeFilters && activeFilters.length > 0) {
-      const f = activeFilters[0]; // ersten Filter nehmen
+    // Alle aktiven Filter als Schnittmenge prüfen
+    for (const f of activeFilters) {
       switch (f.type) {
         case 'order':   if (r.order   !== f.name) return false; break;
         case 'family':  if (r.family  !== f.name) return false; break;
         case 'genus':   if (r.genus   !== f.name) return false; break;
         case 'species': if (r.species !== f.name) return false; break;
+        case 'months': {
+          const sm = parseInt(r.month);
+          const em = parseInt(r.endMonth);
+          if (isNaN(sm) || isNaN(em)) return false;
+          if (sm !== f.startMonth || em !== f.endMonth) return false;
+          break;
+        }
+        case 'startMonth': {
+          const sm = parseInt(r.month);
+          if (isNaN(sm)) return false;
+          if (sm !== f.month) return false;
+          break;
+        }
       }
     }
-    // Jahresfilter
+    // Jahresfilter (eigener Zustand, kein activeFilters-Eintrag)
     if (yearFilterFrom !== null && yearFilterTo !== null) {
       const y = parseInt(r.year);
       if (isNaN(y) || y < yearFilterFrom || y > yearFilterTo) return false;
@@ -336,12 +353,34 @@ function parseRoutes(table) {
   return Object.values(routeMap);
 }
 
-function filterRoutes(name, depth) {
-  if (!name) {
-    activeFilters = [];
-  } else {
+// Gibt nur die Monatsverbindungen zurück, für die in den sichtbaren Routen Daten existieren
+function getVisibleMonthConnections() {
+  const visible = getVisibleRoutes();
+  const connections = {};
+  
+  for (const route of visible) {
+    const startMonth = parseInt(route.month);
+    const endMonth = parseInt(route.endMonth);
+    if (!isNaN(startMonth) && !isNaN(endMonth)) {
+      const key = `${startMonth}-${endMonth}`;
+      connections[key] = (connections[key] || 0) + 1;
+    }
+  }
+  
+  const result = [];
+  for (const [key, count] of Object.entries(connections)) {
+    const [source, target] = key.split('-').map(Number);
+    result.push({ source: source - 1, target: target - 1, value: count });
+  }
+  
+  return result;
+}function filterRoutes(name, depth) {
+  // Nur Vogel-Filtertypen entfernen, andere (z.B. 'months') behalten
+  const birdTypes = ['order', 'family', 'genus', 'species'];
+  activeFilters = activeFilters.filter(f => !birdTypes.includes(f.type));
+  if (name) {
     const typeMap = { 1: 'order', 2: 'family', 3: 'genus', 4: 'species' };
-    activeFilters = [{ type: typeMap[depth], name }];
+    activeFilters.push({ type: typeMap[depth], name });
   }
   selectedRoute        = null;
   selectedRouteData    = null;
@@ -361,6 +400,27 @@ function filterRoutesByMonths(startMonth, endMonth) {
     
     // Neuen Filter hinzufügen
     activeFilters.push({ type: 'months', startMonth, endMonth });
+  }
+  // Auswahl und Tooltip zurücksetzen wenn Filter wechselt
+  selectedRoute        = null;
+  selectedRouteData    = null;
+  selectedRoute_lngLat = null;
+  fixedTooltip.style.opacity = '0';
+
+  buildLayers();
+}
+
+// Filter nach Startmonat (von monthFilter.js aufgerufen wenn auf Node geklickt wird)
+function filterRoutesByStartMonth(month) {
+  if (month === null) {
+    // Filter löschen
+    activeFilters = activeFilters.filter(f => f.type !== 'startMonth');
+  } else {
+    // Existierenden Startmonat-Filter entfernen
+    activeFilters = activeFilters.filter(f => f.type !== 'startMonth');
+    
+    // Neuen Filter hinzufügen
+    activeFilters.push({ type: 'startMonth', month });
   }
   // Auswahl und Tooltip zurücksetzen wenn Filter wechselt
   selectedRoute        = null;
@@ -413,9 +473,6 @@ function buildLegend() {
   // Checkbox-Listener anhängen
   const cb = document.getElementById('hide-stops-checkbox');
   if (cb) {
-    // Checkbox Farbe
-    try { cb.style.cssText = 'accent-color: #3A5D53; cursor: pointer;'; } catch (e) {}
-
     cb.addEventListener('change', function() {
       hideStops = !!this.checked;
       // Neu aufbauen / aktualisieren
