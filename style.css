@@ -65,7 +65,7 @@ h1 {
 }
 
 /* Überschrift in der Karte */
-.search-bar {
+.title {
   position: absolute;
   top: 30px;
   left: 30px;
