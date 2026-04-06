@@ -27,7 +27,7 @@ let selectedNode = null;
 
 // monthFilter initialisieren
 function initmonthFilter(csvTable) {
-  const container = document.getElementById('chord-diagram-container');
+  const container = document.getElementById('monthFilter');
   if (!container) return;
 
   const connections = parseMigrationConnections(csvTable);
@@ -409,7 +409,7 @@ let currentConnections = [];
 // Aktualisiert die Verbindungen im Chord-Diagramm (z.B. wenn andere Filter angewendet werden)
 function updateMonthFilterConnections(connections) {
   currentConnections = connections;
-  const container = document.getElementById('chord-diagram-container');
+  const container = document.getElementById('monthFilter');
   if (container && connections.length >= 0) {
     drawmonthFilter(container, connections);
   }
@@ -419,13 +419,13 @@ window.onCSVParsed = function(parsedCSV) {
   const connections = parseMigrationConnections(parsedCSV);
   if (connections.length > 0) {
     currentConnections = aggregateConnections(connections);
-    drawmonthFilter(document.getElementById('chord-diagram-container'), currentConnections);
+    drawmonthFilter(document.getElementById('monthFilter'), currentConnections);
   }
 };
 
 window.addEventListener('resize', function() {
   if (currentConnections.length > 0) {
-    const container = document.getElementById('chord-diagram-container');
+    const container = document.getElementById('monthFilter');
     if (container) drawmonthFilter(container, currentConnections);
   }
 });

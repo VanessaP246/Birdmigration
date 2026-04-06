@@ -35,6 +35,11 @@ function setup() {
       onCSVParsed(parsed);
     }
 
+    // Initialize search bar with parsed CSV
+    if (typeof onSearchBarDataReady === 'function') {
+      onSearchBarDataReady(parsed);
+    }
+
     // DEBUG - nach 1 Sekunde ausgeben
 setTimeout(() => {
     const mapEl = document.getElementById('map');
