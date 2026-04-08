@@ -130,17 +130,41 @@ function drawmonthFilter(container, connections) {
     });
   }
 
-  // ── Verbindungslinien ────────────────────────────────────────────────────
+   // ── Verbindungslinien ────────────────────────────────────────────────────
   const connectionGroup = g.append('g').attr('class', 'connections');
-
+ 
   for (const conn of connections) {
-    const source = nodePositions[conn.source];
-    const target = nodePositions[conn.target];
-    const midX   = (source.x + target.x) / 2;
-    const midY   = (source.y + target.y) / 2;
-    const pull   = 0.3;
-    const pathData = `M${source.x},${source.y} Q${midX * (1 - pull)},${midY * (1 - pull)} ${target.x},${target.y}`;
-
+    let pathData;
+    if (conn.source === conn.target) {
+      // Gleicher Monat: quadratische Kurve vom Anfang bis Ende des Kreisbogens
+      const i           = conn.source;
+      const d3MidAngle  = (i / 12) * Math.PI * 2;
+      const startAngle  = d3MidAngle - segmentSpan / 2;
+      const endAngle    = d3MidAngle + segmentSpan / 2;
+ 
+      // D3-Winkel → Math-Winkel (−π/2 verschiebt 12-Uhr auf 0)
+      const p1x = arcInnerR * Math.cos(startAngle - Math.PI / 2);
+      const p1y = arcInnerR * Math.sin(startAngle - Math.PI / 2);
+      const p2x = arcInnerR * Math.cos(endAngle   - Math.PI / 2);
+      const p2y = arcInnerR * Math.sin(endAngle   - Math.PI / 2);
+ 
+      // Kontrollpunkt nach innen zur Kreismitte auf der Mittellinie des Segments
+      const mathMid = d3MidAngle - Math.PI / 2;
+      const cpR  = arcInnerR * 0.3;
+      const cpX  = cpR * Math.cos(mathMid);
+      const cpY  = cpR * Math.sin(mathMid);
+ 
+      pathData = `M${p1x},${p1y} Q${cpX},${cpY} ${p2x},${p2y}`;
+    } else {
+      // Normaler Monat-zu-Monat-Pfad
+      const source = nodePositions[conn.source];
+      const target = nodePositions[conn.target];
+      const midX   = (source.x + target.x) / 2;
+      const midY   = (source.y + target.y) / 2;
+      const pull   = 0.3;
+      pathData = `M${source.x},${source.y} Q${midX * (1 - pull)},${midY * (1 - pull)} ${target.x},${target.y}`;
+    }
+ 
     const path = connectionGroup.append('path')
       .attr('d', pathData)
       .attr('stroke', MONTH_COLORS[conn.source])
@@ -152,7 +176,7 @@ function drawmonthFilter(container, connections) {
       .attr('data-target', conn.target)
       .attr('data-value', conn.value)
       .style('cursor', 'pointer');
-
+ 
     path.on('mouseenter', function() {
         const s = +d3.select(this).attr('data-source');
         const t = +d3.select(this).attr('data-target');
