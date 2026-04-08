@@ -556,48 +556,138 @@ function initBirdFilter() {
     .attr("pointer-events", "none")
     .text("↩");
 
-  // ── Verfügbarkeit aktualisieren ────────────────────────
-  // Blendet Segmente aus die beim aktuellen Jahresfilter nicht vorkommen
-  function updateAvailability() {
-    if (typeof getAvailableNames !== 'function') return;
+  // Recompute partition values (root.x0/x1) based on available leaves.
+  // This only updates the hierarchy data and re-runs d3.partition.
+  function recomputeAvailabilityValues() {
+    if (typeof getAvailableNames !== 'function') return null;
     const available = getAvailableNames();
 
-    paths.each(function(d) {
-      const name = d.data.name;
-      let ok;
-      switch (d.depth) {
-        case 1: ok = available.orders.has(name);   break;
-        case 2: ok = available.families.has(name); break;
-        case 3: ok = available.genera.has(name);   break;
-        case 4: ok = available.species.has(name);  break;
-        default: ok = true;
+    // Sum only available leaves (species). Internal nodes will be summed.
+    root.sum(function(node) {
+      if (!node) return 0;
+      if (!node.children || node.children.length === 0) {
+        const name = node.name || node.data?.name;
+        const isAvail = (available && available.species) ? available.species.has(name) : true;
+        return isAvail ? (node.value || node.data?.value || 0) : 0;
       }
-      d3.select(this)
-        .attr("opacity",        ok ? 1     : 0)
-        .attr("pointer-events", ok ? "all" : "none");
+      return 0;
     });
 
-    labels.each(function(d) {
+    // Re-run partition so x0/x1 reflect the new proportions
+    d3.partition().size([2 * Math.PI, radius])(root);
+
+    return available;
+  }
+
+  // Apply visual updates (paths + labels + visibility) for the current
+  // hierarchy. If mappingBaseDepth/xScale2 are provided they are used to
+  // compute inner/outer radii and angular mapping (zoomed state). When not
+  // provided the default full-view mapping is used.
+  function applyAvailabilityVisuals(mappingBaseDepth = 1, xScale2 = null, duration = 200) {
+    const available = getAvailableNames ? getAvailableNames() : null;
+
+    // Default xScale2 maps identity (no zoom)
+    if (!xScale2) xScale2 = d3.scaleLinear().domain([0, 2 * Math.PI]).range([0, 2 * Math.PI]);
+
+    // Arc generator that respects mappingBaseDepth and the provided xScale2
+    const visualArc = d3.arc()
+      .startAngle(dd => xScale2(Math.max(xScale2.domain()[0], Math.min(xScale2.domain()[1], dd.x0))))
+      .endAngle(dd   => xScale2(Math.max(xScale2.domain()[0], Math.min(xScale2.domain()[1], dd.x1))))
+      .innerRadius(dd => {
+        const rel = Math.max(0, dd.depth - mappingBaseDepth);
+        return innerR + rel * ringW;
+      })
+      .outerRadius(dd => {
+        const rel = Math.max(0, dd.depth - mappingBaseDepth);
+        return innerR + (rel + 1) * ringW;
+      })
+      .padAngle(0.012)
+      .padRadius(radius / 2);
+
+    // Update shapes
+    paths.transition().duration(duration).attr("d", d => visualArc(d));
+
+    // Update visibility/interaction per node
+    paths.each(function(d) {
       const name = d.data.name;
-      let ok;
-      switch (d.depth) {
-        case 1: ok = available.orders.has(name);   break;
-        case 2: ok = available.families.has(name); break;
-        case 3: ok = available.genera.has(name);   break;
-        case 4: ok = available.species.has(name);  break;
-        default: ok = true;
+      let avail = true;
+      if (available) {
+        switch (d.depth) {
+          case 1: avail = available.orders.has(name);   break;
+          case 2: avail = available.families.has(name); break;
+          case 3: avail = available.genera.has(name);   break;
+          case 4: avail = available.species.has(name);  break;
+          default: avail = true;
+        }
       }
-      if (!ok) d3.select(this).text("");
+
+      const visibleBecauseOfZoom = (currentRoot === root) ? true : (isDescendant(currentRoot, d) && d !== currentRoot);
+      const show = avail && visibleBecauseOfZoom && (d.value && d.value > 0);
+
+      d3.select(this)
+        .attr("opacity",        show ? 1     : 0)
+        .attr("pointer-events", show ? "all" : "none");
+    });
+
+    // Update labels to match the visualArc geometry and visibility
+    labels.each(function(d) {
+      const node = d3.select(this);
+      const name = d.data.name;
+      let avail = true;
+      if (available) {
+        switch (d.depth) {
+          case 1: avail = available.orders.has(name);   break;
+          case 2: avail = available.families.has(name); break;
+          case 3: avail = available.genera.has(name);   break;
+          case 4: avail = available.species.has(name);  break;
+          default: avail = true;
+        }
+      }
+      const visibleBecauseOfZoom = (currentRoot === root) ? true : (isDescendant(currentRoot, d) && d !== currentRoot);
+      const show = avail && visibleBecauseOfZoom && (d.value && d.value > 0);
+
+      if (!show) { node.text(""); return; }
+
+      // compute mid radius and arc length using current partition angles
+      const startA = xScale2(Math.max(xScale2.domain()[0], Math.min(xScale2.domain()[1], d.x0)));
+      const endA   = xScale2(Math.max(xScale2.domain()[0], Math.min(xScale2.domain()[1], d.x1)));
+      const relDepth = d.depth - mappingBaseDepth;
+      const midR = innerR + Math.max(0, relDepth) * ringW + ringW / 2;
+      const arcLen = (endA - startA) * midR;
+      if (arcLen < 20) { node.text(""); return; }
+
+      const midAngle = (startA + endA) / 2 - Math.PI / 2;
+      let rotateDeg = (midAngle + Math.PI / 2) * 180 / Math.PI;
+      if (rotateDeg > 90 && rotateDeg < 270) rotateDeg += 180;
+
+      node
+        .attr("transform", `translate(${Math.cos(midAngle) * midR},${Math.sin(midAngle) * midR}) rotate(${rotateDeg})`)
+        .text(d.data.name);
+
+      const maxChars = Math.floor(arcLen / 6);
+      if (d.data.name.length > maxChars && maxChars > 3) {
+        node.text(d.data.name.slice(0, maxChars - 1) + "…");
+      }
     });
   }
 
   // Globale Referenz setzen damit yearFilter.js es aufrufen kann
-  _updateBirdAvailability = updateAvailability;
+  _updateBirdAvailability = function() {
+    // Recompute then apply visuals using the current mapping (zoom state)
+    const available = recomputeAvailabilityValues();
+    // Determine xScale2/mappingBaseDepth for currentRoot
+    const x0 = currentRoot.x0;
+    const dx = currentRoot.x1 - currentRoot.x0;
+    const xScale2 = d3.scaleLinear().domain([x0, x0 + dx]).range([0, 2 * Math.PI]);
+    const mappingBaseDepth = Math.max(currentRoot.depth + 1, 1);
+    applyAvailabilityVisuals(mappingBaseDepth, xScale2, 200);
+  };
 
   updateCenter(root);
-  setTimeout(updateAvailability, 200);
+  // initial compute/apply once mapRoutes is ready
+  setTimeout(() => { const available = recomputeAvailabilityValues(); applyAvailabilityVisuals(1, d3.scaleLinear().domain([0,2*Math.PI]).range([0,2*Math.PI]), 200); }, 200);
 
-  // ── Zoom ───────────────────────────────────────────────
+  // Zoom
   function zoomTo(target) {
     if (target === currentRoot) target = root;
     currentRoot = target;
@@ -636,13 +726,20 @@ function initBirdFilter() {
         };
       });
 
-    updateCenter(target);
-    updateLabels(target, xScale2, mappingBaseDepth);
+  updateCenter(target);
+  updateLabels(target, xScale2, mappingBaseDepth);
 
-    // Verfügbarkeit nach der Animation neu prüfen
-    setTimeout(updateAvailability, 650);
+  // Recompute availability values now so angles reflect available leaves
+  // before we let the animation finish. This avoids a race where the
+  // partition is recomputed with the old mapping and then overrides the
+  // zoom animation.
+  recomputeAvailabilityValues();
 
-    onBirdFilterChange(target === root ? null : target.data.name, target.depth);
+  // After the zoom animation finishes, apply visual updates using the
+  // same xScale2/mappingBaseDepth so geometry remains consistent.
+  setTimeout(() => applyAvailabilityVisuals(mappingBaseDepth, xScale2, 200), 650);
+
+  onBirdFilterChange(target === root ? null : target.data.name, target.depth);
   }
 
   function isDescendant(ancestor, node) {
