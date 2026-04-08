@@ -370,6 +370,8 @@ function clamp(val, min, max) {
 
 function onYearFilterChange(from, to) {
   filterRoutesByYear(from, to);
+  // Vogel-Filter Verfügbarkeit aktualisieren
+  refreshBirdAvailability();
 }
 
 // Start

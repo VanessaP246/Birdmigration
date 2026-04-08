@@ -1,3 +1,21 @@
+// Ganz oben – NICHT innerhalb von buildLayers() oder onMapReady()
+function getAvailableNames() {
+  const filtered = allRoutes.filter(r => {
+    if (yearFilterFrom !== null && yearFilterTo !== null) {
+      const y = parseInt(r.year);
+      if (isNaN(y) || y < yearFilterFrom || y > yearFilterTo) return false;
+    }
+    return true;
+  });
+
+  return {
+    orders:   new Set(filtered.map(r => r.order)),
+    families: new Set(filtered.map(r => r.family)),
+    genera:   new Set(filtered.map(r => r.genus)),
+    species:  new Set(filtered.map(r => r.species)),
+  };
+}
+
 // Farben je Red-List-Status
 const RL_LINE_COLOR = {
   'Critically Endangered': '#E76F51',
