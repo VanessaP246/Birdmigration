@@ -65,13 +65,14 @@ h1 {
 }
 
 /* Überschrift in der Karte */
-.title {
+.heading {
   position: absolute;
   top: 30px;
   left: 30px;
   font-size: 1.2rem;
   font-weight: bold;
   color: #fff;
+  z-index: 100;
 }
 
 /* Legende */
@@ -193,7 +194,7 @@ h1 {
   overflow: visible !important;
 }
 
-.search-bar-container {
+.searchBar-container {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -201,14 +202,14 @@ h1 {
   position: relative;
 }
 
-.search-input-wrapper {
+.searchBar-inputWrapper {
   display: flex;
   align-items: center;
   gap: 8px;
   position: relative;
 }
 
-.search-input {
+.searchBar-input {
   flex: 1;
   padding: 10px 12px;
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -220,18 +221,18 @@ h1 {
   font-family: sans-serif;
 }
 
-.search-input:focus {
+.searchBar-input:focus {
   outline: none;
   border-color: rgba(255, 255, 255, 0.4);
   background: rgba(255, 255, 255, 0.08);
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
 }
 
-.search-input::placeholder {
+.searchBar-input::placeholder {
   color: rgba(255, 255, 255, 0.5);
 }
 
-.search-clear-btn {
+.searchBar-clearBtn {
   padding: 6px 10px;
   border: none;
   border-radius: 4px;
@@ -244,11 +245,11 @@ h1 {
   line-height: 1;
 }
 
-.search-clear-btn:hover {
+.searchBar-clearBtn:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 
-.search-suggestions {
+.searchBar-suggestions {
   flex: 1;
   overflow-y: auto;
   border-radius: 6px;
@@ -259,17 +260,17 @@ h1 {
   gap: 0;
 }
 
-.search-group {
+.searchBar-group {
   display: flex;
   flex-direction: column;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.search-group:last-child {
+.searchBar-group:last-child {
   border-bottom: none;
 }
 
-.search-group-label {
+.searchBar-groupLabel {
   padding: 8px 12px;
   font-size: 0.75rem;
   font-weight: bold;
@@ -279,7 +280,7 @@ h1 {
   background: rgba(0, 0, 0, 0.2);
 }
 
-.suggestion-item {
+.searchBar-suggestionItem {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -290,24 +291,24 @@ h1 {
   user-select: none;
 }
 
-.suggestion-item:hover,
-.suggestion-item.active {
+.searchBar-suggestionItem:hover,
+.searchBar-suggestionItem.active {
   background: rgba(255, 255, 255, 0.08);
 }
 
-.suggestion-icon {
+.searchBar-suggestionIcon {
   font-size: 1.2rem;
   width: 24px;
   text-align: center;
   flex-shrink: 0;
 }
 
-.suggestion-text {
+.searchBar-suggestionText {
   flex: 1;
   min-width: 0;
 }
 
-.suggestion-title {
+.searchBar-suggestionTitle {
   font-size: 0.85rem;
   color: #fff;
   white-space: nowrap;
@@ -315,13 +316,13 @@ h1 {
   text-overflow: ellipsis;
 }
 
-.suggestion-meta {
+.searchBar-suggestionMeta {
   font-size: 0.7rem;
   color: rgba(255, 255, 255, 0.5);
   margin-top: 2px;
 }
 
-.search-no-results {
+.searchBar-noResults {
   padding: 16px 12px;
   text-align: center;
   color: rgba(255, 255, 255, 0.5);
@@ -329,32 +330,32 @@ h1 {
 }
 
 /* Scrollbar-Styling für Suggestions */
-.search-suggestions::-webkit-scrollbar {
+.searchBar-suggestions::-webkit-scrollbar {
   width: 6px;
 }
 
-.search-suggestions::-webkit-scrollbar-track {
+.searchBar-suggestions::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.search-suggestions::-webkit-scrollbar-thumb {
+.searchBar-suggestions::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 3px;
 }
 
-.search-suggestions::-webkit-scrollbar-thumb:hover {
+.searchBar-suggestions::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 }
 
 /* Verschiedene Vorschlagstypen */
-.suggestion-item.suggestion-bird {
+.searchBar-suggestionItem.searchBar-bird {
   border-left: 3px solid rgba(255, 200, 100, 0.5);
 }
 
-.suggestion-item.suggestion-location {
+.searchBar-suggestionItem.searchBar-location {
   border-left: 3px solid rgba(100, 200, 255, 0.5);
 }
 
-.suggestion-item.suggestion-geolocation {
+.searchBar-suggestionItem.searchBar-geolocation {
   border-left: 3px solid rgba(150, 255, 150, 0.5);
 }

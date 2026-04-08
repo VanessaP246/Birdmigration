@@ -52,24 +52,24 @@ function initSearchBar() {
   if (!container) return;
 
   container.innerHTML = `
-    <div class="search-bar-container">
-      <div class="search-input-wrapper">
+    <div class="searchBar-container">
+      <div class="searchBar-inputWrapper">
         <input 
           type="text" 
-          id="search-input" 
-          class="search-input" 
+          id="searchBar-input" 
+          class="searchBar-input" 
           placeholder="Search birds or locations..."
           autocomplete="off"
         />
-        <button id="search-clear-btn" class="search-clear-btn" title="Clear">✕</button>
+        <button id="searchBar-clearBtn" class="searchBar-clearBtn" title="Clear">✕</button>
       </div>
-      <div id="search-suggestions" class="search-suggestions"></div>
+      <div id="searchBar-suggestions" class="searchBar-suggestions"></div>
     </div>
   `;
 
-  const input = document.getElementById('search-input');
-  const suggestionsDiv = document.getElementById('search-suggestions');
-  const clearBtn = document.getElementById('search-clear-btn');
+  const input = document.getElementById('searchBar-input');
+  const suggestionsDiv = document.getElementById('searchBar-suggestions');
+  const clearBtn = document.getElementById('searchBar-clearBtn');
 
   // Event: Input mit Debounce
   let searchTimeout;
@@ -265,14 +265,14 @@ function displaySuggestions(results, container, input) {
 
   // Vogel-Ergebnisse
   if (results.birds.length > 0) {
-    html += '<div class="search-group"><div class="search-group-label">Birds</div>';
+    html += '<div class="searchBar-group"><div class="searchBar-groupLabel">Birds</div>';
     results.birds.forEach(bird => {
       html += `
-        <div class="suggestion-item suggestion-bird" data-type="bird" data-value="${escapeHtml(bird.species)}">
-          <div class="suggestion-icon">🐦</div>
-          <div class="suggestion-text">
-            <div class="suggestion-title">${escapeHtml(bird.species)}</div>
-            <div class="suggestion-meta">${bird.count} routes</div>
+        <div class="searchBar-suggestionItem searchBar-bird" data-type="bird" data-value="${escapeHtml(bird.species)}">
+          <div class="searchBar-suggestionIcon">🐦</div>
+          <div class="searchBar-suggestionText">
+            <div class="searchBar-suggestionTitle">${escapeHtml(bird.species)}</div>
+            <div class="searchBar-suggestionMeta">${bird.count} routes</div>
           </div>
         </div>
       `;
@@ -282,14 +282,14 @@ function displaySuggestions(results, container, input) {
 
   // CSV-Länder-Ergebnisse
   if (results.locations.length > 0) {
-    html += '<div class="search-group"><div class="search-group-label">Countries</div>';
+    html += '<div class="searchBar-group"><div class="searchBar-groupLabel">Countries</div>';
     results.locations.forEach(loc => {
       html += `
-        <div class="suggestion-item suggestion-location" data-type="location" data-value="${escapeHtml(loc.country)}" data-lon="${loc.lon}" data-lat="${loc.lat}">
-          <div class="suggestion-icon">�️</div>
-          <div class="suggestion-text">
-            <div class="suggestion-title">${escapeHtml(loc.country)}</div>
-            <div class="suggestion-meta">${loc.count} data points</div>
+        <div class="searchBar-suggestionItem searchBar-location" data-type="location" data-value="${escapeHtml(loc.country)}" data-lon="${loc.lon}" data-lat="${loc.lat}">
+          <div class="searchBar-suggestionIcon">🗺️</div>
+          <div class="searchBar-suggestionText">
+            <div class="searchBar-suggestionTitle">${escapeHtml(loc.country)}</div>
+            <div class="searchBar-suggestionMeta">${loc.count} data points</div>
           </div>
         </div>
       `;
@@ -299,17 +299,17 @@ function displaySuggestions(results, container, input) {
 
   // OpenStreetMap Geocoding-Ergebnisse
   if (results.geolocations && results.geolocations.length > 0) {
-    html += '<div class="search-group"><div class="search-group-label">Places</div>';
+    html += '<div class="searchBar-group"><div class="searchBar-groupLabel">Places</div>';
     results.geolocations.forEach(geo => {
       const icon = getLocationIcon(geo.category, geo.type);
       const displayText = geo.name || geo.displayName;
       const boundingboxJSON = geo.boundingbox ? JSON.stringify(geo.boundingbox) : '';
       html += `
-        <div class="suggestion-item suggestion-geolocation" data-type="geolocation" data-value="${escapeHtml(displayText)}" data-lon="${geo.lon}" data-lat="${geo.lat}" data-name="${escapeHtml(geo.name)}" data-type-osm="${escapeHtml(geo.type)}" data-boundingbox='${boundingboxJSON}'>
-          <div class="suggestion-icon">${icon}</div>
-          <div class="suggestion-text">
-            <div class="suggestion-title">${escapeHtml(geo.name)}</div>
-            <div class="suggestion-meta">${escapeHtml(geo.type)}</div>
+        <div class="searchBar-suggestionItem searchBar-geolocation" data-type="geolocation" data-value="${escapeHtml(displayText)}" data-lon="${geo.lon}" data-lat="${geo.lat}" data-name="${escapeHtml(geo.name)}" data-type-osm="${escapeHtml(geo.type)}" data-boundingbox='${boundingboxJSON}'>
+          <div class="searchBar-suggestionIcon">${icon}</div>
+          <div class="searchBar-suggestionText">
+            <div class="searchBar-suggestionTitle">${escapeHtml(geo.name)}</div>
+            <div class="searchBar-suggestionMeta">${escapeHtml(geo.type)}</div>
           </div>
         </div>
       `;
@@ -318,39 +318,39 @@ function displaySuggestions(results, container, input) {
   }
 
   if (html === '') {
-    container.innerHTML = '<div class="search-no-results">No results found</div>';
+    container.innerHTML = '<div class="searchBar-noResults">No results found</div>';
   } else {
     container.innerHTML = html;
 
     // Event-Listener auf alle Suggestions
-    document.querySelectorAll('.suggestion-item').forEach(item => {
+    document.querySelectorAll('.searchBar-suggestionItem').forEach(item => {
       item.addEventListener('click', (e) => {
         onSuggestionSelected(item, input, container);
       });
       item.addEventListener('mouseover', () => {
-        document.querySelectorAll('.suggestion-item').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.searchBar-suggestionItem').forEach(s => s.classList.remove('active'));
         item.classList.add('active');
       });
     });
 
     // Mit Pfeiltasten navigieren
     input.addEventListener('keydown', (e) => {
-      const items = Array.from(container.querySelectorAll('.suggestion-item'));
-      const activeItem = container.querySelector('.suggestion-item.active');
+      const items = Array.from(container.querySelectorAll('.searchBar-suggestionItem'));
+      const activeItem = container.querySelector('.searchBar-suggestionItem.active');
       let currentIndex = activeItem ? items.indexOf(activeItem) : -1;
 
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         currentIndex = Math.min(currentIndex + 1, items.length - 1);
         if (items[currentIndex]) {
-          document.querySelectorAll('.suggestion-item').forEach(s => s.classList.remove('active'));
+          document.querySelectorAll('.searchBar-suggestionItem').forEach(s => s.classList.remove('active'));
           items[currentIndex].classList.add('active');
         }
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         currentIndex = Math.max(currentIndex - 1, 0);
         if (items[currentIndex]) {
-          document.querySelectorAll('.suggestion-item').forEach(s => s.classList.remove('active'));
+          document.querySelectorAll('.searchBar-suggestionItem').forEach(s => s.classList.remove('active'));
           items[currentIndex].classList.add('active');
         }
       }
