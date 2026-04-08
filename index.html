@@ -60,6 +60,9 @@
           map.keyboard.disable();
           // Kartenrotierung mit Touchgesten deaktivieren
           map.touchZoomRotate.disableRotation();
+
+          // Karte im Fullscreen
+          map.addControl(new maplibregl.FullscreenControl());
         </script>
 
         <div class="title"></div>
