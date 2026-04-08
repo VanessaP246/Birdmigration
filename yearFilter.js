@@ -199,6 +199,116 @@ function render() {
     document.addEventListener('touchend', () => { dragging = false; });
   }
 
+  // Klick auf die Schiene – Zeiger an Klick-Position setzen
+sliderWrap.addEventListener('click', e => {
+  // Klicks auf die Zeiger selbst ignorieren
+  if (e.target === thumbFrom || e.target === thumbTo) return;
+
+  const rect = sliderWrap.getBoundingClientRect();
+  const pct  = clamp((e.clientX - rect.left) / rect.width, 0, 1);
+  const year = Math.round(pct * (YEAR_MAX - YEAR_MIN) + YEAR_MIN);
+
+  if (rangeMode) {
+    // Mittelpunkt der Zeitspanne an Klick-Position verschieben
+    const span    = yearTo - yearFrom;         // aktuelle Spannweite beibehalten
+    const halfSpan = Math.round(span / 2);
+    let newFrom = year - halfSpan;
+    let newTo   = year + (span - halfSpan);    // Rest der Spanne nach rechts
+
+    // Ränder nicht überschreiten
+    if (newFrom < YEAR_MIN) { newFrom = YEAR_MIN; newTo = YEAR_MIN + span; }
+    if (newTo   > YEAR_MAX) { newTo = YEAR_MAX;   newFrom = YEAR_MAX - span; }
+
+    yearFrom = newFrom;
+    yearTo   = newTo;
+  } else {
+    // Einzelmodus: Zeiger direkt setzen
+    yearFrom = year;
+  }
+
+  render();
+  onYearFilterChange(yearFrom, rangeMode ? yearTo : yearFrom);
+});
+
+// Zeitspanne als Ganzes verschieben – Drag auf die Füllung
+let spanDragging = false;
+let spanDragStartX = null;
+let spanDragStartFrom = null;
+let spanDragStartTo = null;
+
+fill.style.pointerEvents = 'auto'; // Klicks/Drags auf Fill erlauben
+fill.style.cursor = 'grab';
+
+fill.addEventListener('mousedown', e => {
+  if (!rangeMode) return;
+  spanDragging     = true;
+  spanDragStartX    = e.clientX;
+  spanDragStartFrom = yearFrom;
+  spanDragStartTo   = yearTo;
+  fill.style.cursor = 'grabbing';
+  e.stopPropagation(); // verhindert dass sliderWrap-Klick feuert
+  e.preventDefault();
+});
+
+document.addEventListener('mousemove', e => {
+  if (!spanDragging) return;
+  const rect   = sliderWrap.getBoundingClientRect();
+  const span   = spanDragStartTo - spanDragStartFrom;
+  const deltaPct = (e.clientX - spanDragStartX) / rect.width;
+  const deltaYear = Math.round(deltaPct * (YEAR_MAX - YEAR_MIN));
+
+  let newFrom = spanDragStartFrom + deltaYear;
+  let newTo   = spanDragStartTo   + deltaYear;
+
+  // Ränder nicht überschreiten
+  if (newFrom < YEAR_MIN) { newFrom = YEAR_MIN; newTo = YEAR_MIN + span; }
+  if (newTo   > YEAR_MAX) { newTo = YEAR_MAX;   newFrom = YEAR_MAX - span; }
+
+  yearFrom = newFrom;
+  yearTo   = newTo;
+  render();
+  onYearFilterChange(yearFrom, yearTo);
+});
+
+document.addEventListener('mouseup', () => {
+  if (spanDragging) {
+    spanDragging      = false;
+    fill.style.cursor = 'grab';
+  }
+});
+
+// Touch-Support für die Zeitspanne
+fill.addEventListener('touchstart', e => {
+  if (!rangeMode) return;
+  spanDragging      = true;
+  spanDragStartX    = e.touches[0].clientX;
+  spanDragStartFrom = yearFrom;
+  spanDragStartTo   = yearTo;
+  e.stopPropagation();
+  e.preventDefault();
+});
+
+document.addEventListener('touchmove', e => {
+  if (!spanDragging) return;
+  const rect     = sliderWrap.getBoundingClientRect();
+  const span     = spanDragStartTo - spanDragStartFrom;
+  const deltaPct = (e.touches[0].clientX - spanDragStartX) / rect.width;
+  const deltaYear = Math.round(deltaPct * (YEAR_MAX - YEAR_MIN));
+
+  let newFrom = spanDragStartFrom + deltaYear;
+  let newTo   = spanDragStartTo   + deltaYear;
+
+  if (newFrom < YEAR_MIN) { newFrom = YEAR_MIN; newTo = YEAR_MIN + span; }
+  if (newTo   > YEAR_MAX) { newTo = YEAR_MAX;   newFrom = YEAR_MAX - span; }
+
+  yearFrom = newFrom;
+  yearTo   = newTo;
+  render();
+  onYearFilterChange(yearFrom, yearTo);
+});
+
+document.addEventListener('touchend', () => { spanDragging = false; });
+
   makeDraggable(thumbFrom, false);
   makeDraggable(thumbTo,   true);
 
