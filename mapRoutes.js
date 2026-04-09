@@ -34,6 +34,15 @@ const RL_POINT_COLOR = {
   '':                      '#555555',
 };
 
+const RL_SPECIAL_POINT_COLOR = {
+  'Critically Endangered': '#F1A997',
+  'Endangered':            '#F8C7A0',
+  'Vulnerable':            '#F2DCA6',
+  'Near Threatened':       '#c7dab3',
+  'Least Concern':         '#A0C3B9',
+  '':                      '#888888',
+};
+
 const LINE_WIDTH_NORMAL = 1.2; // normale Linienbreite 
 const LINE_WIDTH_HOVER  = 2.5; // Breite bei Hover/Auswahl 
 const POINT_RADIUS      = 3;   // Kreis-Radius
@@ -192,7 +201,7 @@ function buildLayers() {
       layout: {
         'text-field': ['get', 'symbol'],
         'text-font': ['Open Sans Bold', 'Arial Unicode MS Regular'],
-        'text-size': 24,
+        'text-size': 18, // Größe der Symbole
         'text-offset': [0, 0],
         'text-allow-overlap': true,
         'text-rotate': ['get', 'rotation']
@@ -394,7 +403,7 @@ function updateHighlightSymbols() {
           species: route.species,
           rl: route.rl,
           node: pt.node,
-          color: RL_POINT_COLOR[route.rl] || RL_POINT_COLOR[''],
+          color: RL_SPECIAL_POINT_COLOR[route.rl] || RL_SPECIAL_POINT_COLOR[''],
           symbol: symbol,
           rotation: rotation
         },
