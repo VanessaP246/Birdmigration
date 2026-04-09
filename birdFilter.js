@@ -775,7 +775,7 @@ function initBirdFilter() {
     centerCircle.transition().duration(400)
       .attr("fill", isRoot ? "#1a1d22" : getColor(target));
     centerText
-      .text(isRoot ? "Alle Vögel" : target.data.name)
+      .text(isRoot ? "All birds" : target.data.name)
       .attr("font-size", isRoot ? "0.75rem" : "0.7rem")
       .attr("y", isRoot ? 0 : -(innerR * 0.2));
     centerArrow.text(isRoot ? "" : "↩");
