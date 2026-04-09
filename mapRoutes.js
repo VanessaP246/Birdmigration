@@ -635,13 +635,13 @@ function buildLegend() {
 
   const div = document.createElement('div');
   // Keep the inner div transparent so the backdrop blur shows through
-  div.style.cssText = 'margin-top:12px;color:#fff;font-size:0.72rem;line-height:1.8;background:transparent';
+  div.style.cssText = 'margin-top:12px;color:#fff;font-size:0.8rem;line-height:1.8;background:transparent';
   div.innerHTML = `
     <div style="font-weight:bold;margin-bottom:4px">Red List</div>
     ${Object.entries(RL_LINE_COLOR).filter(([k]) => k).map(([label, color]) =>
       `<div><span style="display:inline-block;width:10px;height:10px;background:${color};border-radius:2px;margin-right:5px"></span>${label}</div>`
     ).join('')}
-    <div style="font-weight:bold;margin-top:8px;margin-bottom:4px">Punkte</div>
+    <div style="font-weight:bold;margin-top:8px;margin-bottom:4px">Nodes</div>
     <div style="margin-bottom:6px"><label><input type="checkbox" id="hide-stops-checkbox" ${hideStops ? 'checked' : ''}/> Hide transit locations</label></div>
     <div>▲ Origin</div>
     <div>● Transit location</div>
@@ -652,6 +652,7 @@ function buildLegend() {
   // Checkbox-Listener anhängen
   const cb = document.getElementById('hide-stops-checkbox');
   if (cb) {
+    cb.style.cssText = 'accent-color: #3A5D53; cursor: pointer; width:14px; height:14px;';
     cb.addEventListener('change', function() {
       hideStops = !!this.checked;
       // Neu aufbauen / aktualisieren
