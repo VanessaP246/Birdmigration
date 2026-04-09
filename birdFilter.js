@@ -376,10 +376,10 @@
 // Anbindung an die Karte: onBirdFilterChange() ganz unten
 
 
-// ── Hierarchie-Daten ───────────────────────────────────────
+// Hierarchie-Daten
 const BIRD_DATA = {"name": "root", "children": [{"name": "Accipitriformes", "children": [{"name": "Pandionidae", "children": [{"name": "Pandion", "children": [{"name": "Osprey", "value": 2240}]}]}, {"name": "Accipitridae", "children": [{"name": "Buteo", "children": [{"name": "Ferruginous Hawk", "value": 176}, {"name": "Eurasian Buzzard", "value": 157}, {"name": "Japanese Buzzard", "value": 72}, {"name": "Swainson's Hawk", "value": 517}, {"name": "Long-legged Buzzard", "value": 49}]}, {"name": "Clanga", "children": [{"name": "Lesser Spotted Eagle", "value": 387}, {"name": "Greater Spotted Eagle", "value": 73}]}, {"name": "Pernis", "children": [{"name": "European Honey-buzzard", "value": 1593}]}, {"name": "Haliaeetus", "children": [{"name": "Steller's Sea-eagle", "value": 9}, {"name": "White-tailed Sea-eagle", "value": 6}, {"name": "Bald Eagle", "value": 22}]}, {"name": "Aquila", "children": [{"name": "Steppe Eagle", "value": 323}]}, {"name": "Circus", "children": [{"name": "Western Marsh-harrier", "value": 519}, {"name": "Montagu's Harrier", "value": 1783}]}, {"name": "Milvus", "children": [{"name": "Black Kite", "value": 392}, {"name": "Red Kite", "value": 144}]}, {"name": "Aegypius", "children": [{"name": "Cinereous Vulture", "value": 243}]}, {"name": "Accipiter", "children": [{"name": "Levant Sparrowhawk", "value": 57}]}, {"name": "Hieraaetus", "children": [{"name": "Booted Eagle", "value": 175}]}]}]}, {"name": "Falconiformes", "children": [{"name": "Falconidae", "children": [{"name": "Falco", "children": [{"name": "Sooty Falcon", "value": 518}, {"name": "Lesser Kestrel", "value": 824}, {"name": "Eleonora's Falcon", "value": 1197}, {"name": "Amur Falcon", "value": 48}, {"name": "Peregrine Falcon", "value": 585}]}]}]}, {"name": "Gruiformes", "children": [{"name": "Gruidae", "children": [{"name": "Grus", "children": [{"name": "White-naped Crane", "value": 72}, {"name": "Red-crowned Crane", "value": 11}]}, {"name": "Leucogeranus", "children": [{"name": "Siberian Crane", "value": 88}]}, {"name": "Anthropoides", "children": [{"name": "Demoiselle Crane", "value": 662}]}]}]}, {"name": "Passeriformes", "children": [{"name": "Vireonidae", "children": [{"name": "Vireo", "children": [{"name": "Vireo olivaceus", "value": 677}]}]}, {"name": "Fringillidae", "children": [{"name": "Chloris", "children": [{"name": "European Greenfinch", "value": 159}]}, {"name": "Carpodacus", "children": [{"name": "Common Rosefinch", "value": 254}]}]}, {"name": "Parulidae", "children": [{"name": "Setophaga", "children": [{"name": "Blackpoll Warbler", "value": 860}]}, {"name": "Icteria", "children": [{"name": "Yellow-breasted Chat", "value": 41}]}, {"name": "Cardellina", "children": [{"name": "Canada Warbler", "value": 1649}]}, {"name": "Vermivora", "children": [{"name": "Vermivora chrysoptera", "value": 904}]}]}, {"name": "Hirundinidae", "children": [{"name": "Hirundo", "children": [{"name": "Barn Swallow", "value": 1721}]}, {"name": "Riparia", "children": [{"name": "Collared Sand Martin", "value": 33}]}]}, {"name": "Emberizidae", "children": [{"name": "Emberiza", "children": [{"name": "Ortolan Bunting", "value": 710}]}]}, {"name": "Laniidae", "children": [{"name": "Lanius", "children": [{"name": "Red-backed Shrike", "value": 1248}]}]}, {"name": "Mimidae", "children": [{"name": "Dumetella", "children": [{"name": "Grey Catbird", "value": 58}]}]}, {"name": "Phylloscopidae", "children": [{"name": "Phylloscopus", "children": [{"name": "Phylloscopus trochilus", "value": 1375}]}]}, {"name": "Sylviidae", "children": [{"name": "Curruca", "children": [{"name": "Common Whitethroat", "value": 579}]}]}, {"name": "Tyrannidae", "children": [{"name": "Tyrannus", "children": [{"name": "Eastern Kingbird", "value": 119}]}]}, {"name": "Troglodytidae", "children": [{"name": "Troglodytes", "children": [{"name": "House Wren", "value": 137}]}]}]}, {"name": "Ciconiiformes", "children": [{"name": "Ciconiidae", "children": [{"name": "Ciconia", "children": [{"name": "Oriental Stork", "value": 161}, {"name": "Black Stork", "value": 344}, {"name": "White Stork", "value": 132}]}]}]}, {"name": "Charadriiformes", "children": [{"name": "Scolopacidae", "children": [{"name": "Calidris", "children": [{"name": "Temminck's Stint", "value": 385}, {"name": "Purple Sandpiper", "value": 80}, {"name": "Red Knot", "value": 264}, {"name": "Buff-breasted Sandpiper", "value": 289}, {"name": "Dunlin", "value": 226}]}, {"name": "Limosa", "children": [{"name": "Bar-tailed Godwit", "value": 115}]}, {"name": "Numenius", "children": [{"name": "Far Eastern Curlew", "value": 182}, {"name": "Eurasian Curlew", "value": 90}, {"name": "Whimbrel", "value": 417}]}, {"name": "Bartramia", "children": [{"name": "Upland Sandpiper", "value": 453}]}, {"name": "Scolopax", "children": [{"name": "Eurasian Woodcock", "value": 119}, {"name": "American Woodcock", "value": 245}]}, {"name": "Tringa", "children": [{"name": "Common Redshank", "value": 602}]}, {"name": "Phalaropus", "children": [{"name": "Red-necked Phalarope", "value": 1704}]}, {"name": "Gallinago", "children": [{"name": "Great Snipe", "value": 1371}]}]}, {"name": "Laridae", "children": [{"name": "Larus", "children": [{"name": "Lesser Black-backed Gull", "value": 652}, {"name": "Pallas's Gull", "value": 224}, {"name": "Iceland Gull", "value": 21}]}, {"name": "Sterna", "children": [{"name": "Common Tern", "value": 1013}]}]}, {"name": "Haematopodidae", "children": [{"name": "Haematopus", "children": [{"name": "Eurasian Oystercatcher", "value": 2}]}]}, {"name": "Charadriidae", "children": [{"name": "Charadrius", "children": [{"name": "Mountain Plover", "value": 42}, {"name": "Common Rosefinch", "value": 640}]}, {"name": "Pluvialis", "children": [{"name": "Pacific Golden Plover", "value": 199}]}]}, {"name": "Stercorariidae", "children": [{"name": "Stercorarius", "children": [{"name": "Pomarine Jaeger", "value": 529}]}]}]}, {"name": "Anseriformes", "children": [{"name": "Anatidae", "children": [{"name": "Anas", "children": [{"name": "Common Teal", "value": 65}, {"name": "American Black Duck", "value": 115}, {"name": "Indian Spot-billed Duck", "value": 65}, {"name": "Mallard", "value": 176}, {"name": "Northern Pintail", "value": 201}]}, {"name": "Anser", "children": [{"name": "Lesser White-fronted Goose", "value": 160}, {"name": "Greylag Goose", "value": 49}, {"name": "Bar-headed Goose", "value": 128}, {"name": "Greater White-fronted Goose", "value": 446}, {"name": "Bean Goose", "value": 115}, {"name": "Pink-footed Goose", "value": 35}, {"name": "Swan Goose", "value": 25}]}, {"name": "Mareca", "children": [{"name": "Falcated Duck", "value": 65}, {"name": "Eurasian Wigeon", "value": 194}]}, {"name": "Sibirionetta", "children": [{"name": "Baikal Teal", "value": 65}]}, {"name": "Spatula", "children": [{"name": "Cinnamon Teal", "value": 54}, {"name": "Garganey", "value": 65}]}, {"name": "Branta", "children": [{"name": "Brent Goose", "value": 47}, {"name": "Barnacle Goose", "value": 62}]}, {"name": "Cygnus", "children": [{"name": "Tundra Swan", "value": 51}, {"name": "Trumpeter Swan", "value": 11}]}, {"name": "Chloephaga", "children": [{"name": "Upland Goose", "value": 6}]}, {"name": "Aythya", "children": [{"name": "Ring-necked Duck", "value": 149}]}, {"name": "Tadorna", "children": [{"name": "Ruddy Shelduck", "value": 169}]}]}]}, {"name": "Pelecaniformes", "children": [{"name": "Pelecanidae", "children": [{"name": "Pelecanus", "children": [{"name": "Great White Pelican", "value": 163}]}]}, {"name": "Ardeidae", "children": [{"name": "Botaurus", "children": [{"name": "American Bittern", "value": 209}]}, {"name": "Nycticorax", "children": [{"name": "Black-crowned Night-heron", "value": 83}]}, {"name": "Egretta", "children": [{"name": "Chinese Egret", "value": 305}]}]}, {"name": "Threskiornithidae", "children": [{"name": "Platalea", "children": [{"name": "Eurasian Spoonbill", "value": 527}]}]}]}, {"name": "Suliformes", "children": [{"name": "Phalacrocoracidae", "children": [{"name": "Nannopterum", "children": [{"name": "Double-crested Cormorant", "value": 122}]}]}]}, {"name": "Strigiformes", "children": [{"name": "Strigidae", "children": [{"name": "Athene", "children": [{"name": "Burrowing Owl", "value": 61}]}, {"name": "Psiloscops", "children": [{"name": "Flammulated Owl", "value": 100}]}, {"name": "Asio", "children": [{"name": "Short-eared Owl", "value": 63}]}]}]}, {"name": "Apodiformes", "children": [{"name": "Apodidae", "children": [{"name": "Apus", "children": [{"name": "Common Swift", "value": 697}, {"name": "Pacific Swift", "value": 280}]}]}]}, {"name": "Otidiformes", "children": [{"name": "Otididae", "children": [{"name": "Otis", "children": [{"name": "Great Bustard", "value": 30}]}]}]}, {"name": "Columbiformes", "children": [{"name": "Columbidae", "children": [{"name": "Streptopelia", "children": [{"name": "European Turtle-dove", "value": 55}]}]}]}, {"name": "Gaviiformes", "children": [{"name": "Gaviidae", "children": [{"name": "Gavia", "children": [{"name": "Common Loon", "value": 75}]}]}]}, {"name": "Cuculiformes", "children": [{"name": "Cuculidae", "children": [{"name": "Cuculus", "children": [{"name": "Common Cuckoo", "value": 2702}]}]}]}, {"name": "Caprimulgiformes", "children": [{"name": "Caprimulgidae", "children": [{"name": "Caprimulgus", "children": [{"name": "European Nightjar", "value": 887}]}]}]}]};
 
-// ── Farbpaletten ───────────────────────────────────────────
+// Farbpaletten 
 const COLOR_GROUPS = [
   ["#A0C3B9", "#81AFA1", "#3A5D53", "#2E4A42"],
   ["#f2dca6", "#edd088", "#E9C46A", "#BA9D55"],
@@ -399,7 +399,7 @@ const COLOR_GROUPS = [
   ["#c5c2e5", "#b1addc", "#9E99D3", "#7E7AA9"],
 ];
 
-// ── Globale Referenz auf updateAvailability ────────────────
+// Globale Referenz auf updateAvailability
 // Wird von yearFilter.js aufgerufen wenn der Jahresfilter sich ändert
 let _updateBirdAvailability = null;
 
@@ -407,7 +407,7 @@ function refreshBirdAvailability() {
   if (typeof _updateBirdAvailability === 'function') _updateBirdAvailability();
 }
 
-// ── Hierarchie dynamisch aus allRoutes aufbauen ────────────
+// Hierarchie dynamisch aus allRoutes aufbauen 
 // Ersetzt die hardcodierte BIRD_DATA, damit der Sunburst immer
 // mit dem aktuellen Stand der CSV übereinstimmt.
 function buildBirdDataFromRoutes() {
@@ -461,7 +461,7 @@ function buildBirdDataFromRoutes() {
   return root;
 }
 
-// ── Hauptfunktion ──────────────────────────────────────────
+// Hauptfunktion
 function initBirdFilter() {
   const container = document.getElementById("bird-filter-block");
   if (!container) return;
@@ -517,7 +517,7 @@ function initBirdFilter() {
 
   let currentRoot = root;
 
-  // ── Hover-Infobox ──────────────────────────────────────
+  // Hover-Infobox 
   const tooltip = d3.select(container)
     .append("div")
     .style("position",       "absolute")
@@ -533,7 +533,31 @@ function initBirdFilter() {
 
   const DEPTH_LABEL = ["", "Ordnung", "Familie", "Gattung", "Art"];
 
-  // ── Segmente ───────────────────────────────────────────
+  // Helper: fit text into maxWidth (SVG text). Uses getComputedTextLength and
+  // binary search to find the longest substring that fits, appending an ellipsis.
+  function fitLabel(node, text, maxWidth) {
+    if (!node || !text || maxWidth <= 0) { if (node) node.text(""); return; }
+    const el = node.node();
+    if (!el) return;
+    el.textContent = text;
+    // If it already fits, we're done
+    if (el.getComputedTextLength() <= maxWidth) return;
+
+    // Binary search for the maximum number of characters that fit with an ellipsis
+    let left = 0, right = text.length, fit = 0;
+    while (left <= right) {
+      const mid = Math.floor((left + right) / 2);
+      el.textContent = text.slice(0, mid) + '…';
+      if (el.getComputedTextLength() <= maxWidth) {
+        fit = mid;
+        left = mid + 1;
+      } else {
+        right = mid - 1;
+      }
+    }
+    el.textContent = fit > 0 ? text.slice(0, fit) + '…' : '';
+  }
+  // Segmente
   const paths = g.selectAll("path")
     .data(root.descendants().filter(d => d.depth > 0))
     .join("path")
@@ -563,12 +587,12 @@ function initBirdFilter() {
       zoomTo(d);
     });
 
-  // ── Text-Labels ────────────────────────────────────────
+  // Text-Labels
   const labels = g.selectAll("text")
     .data(root.descendants().filter(d => d.depth > 0))
     .join("text")
     .attr("text-anchor",    "middle")
-    .attr("font-size",      "0.6rem")
+    .attr("font-size",      "12px") // use px to make getComputedTextLength reliable
     .attr("fill",           "#fff")
     .attr("pointer-events", "none")
     .each(function(d) {
@@ -579,18 +603,12 @@ function initBirdFilter() {
       const midAngle = (d.x0 + d.x1) / 2 - Math.PI / 2;
       let rotateDeg = (midAngle + Math.PI / 2) * 180 / Math.PI;
       if (rotateDeg > 90 && rotateDeg < 270) rotateDeg += 180;
-      node
-        .attr("transform", `translate(${Math.cos(midAngle) * midR},${Math.sin(midAngle) * midR}) rotate(${rotateDeg})`)
-        .text(d.data.name);
-      const maxChars = Math.floor(arcLen / 6);
-      if (d.data.name.length > maxChars && maxChars > 3) {
-        node.text(d.data.name.slice(0, maxChars - 1) + "…");
-      } else if (maxChars <= 3) {
-        node.text("");
-      }
+      node.attr("transform", `translate(${Math.cos(midAngle) * midR},${Math.sin(midAngle) * midR}) rotate(${rotateDeg})`);
+      // Fit the label text to the available arc length using measured text width
+      fitLabel(node, d.data.name, Math.max(0, arcLen - 6));
     });
 
-  // ── Mittelkreis ────────────────────────────────────────
+  // Mittelkreis
   const centerCircle = g.append("circle")
     .attr("r",      innerR - 4)
     .attr("fill",   "#1b2a41")
@@ -611,8 +629,6 @@ function initBirdFilter() {
     .attr("pointer-events", "none")
     .text("↩");
 
-  // Recompute partition values (root.x0/x1) based on available leaves.
-  // This only updates the hierarchy data and re-runs d3.partition.
   function recomputeAvailabilityValues() {
     if (typeof getAvailableNames !== 'function') return null;
     const available = getAvailableNames();
@@ -634,10 +650,6 @@ function initBirdFilter() {
     return available;
   }
 
-  // Apply visual updates (paths + labels + visibility) for the current
-  // hierarchy. If mappingBaseDepth/xScale2 are provided they are used to
-  // compute inner/outer radii and angular mapping (zoomed state). When not
-  // provided the default full-view mapping is used.
   function applyAvailabilityVisuals(mappingBaseDepth = 1, xScale2 = null, duration = 200) {
     const available = getAvailableNames ? getAvailableNames() : null;
 
@@ -659,8 +671,12 @@ function initBirdFilter() {
       .padAngle(0.012)
       .padRadius(radius / 2);
 
-    // Update shapes
-    paths.transition().duration(duration).attr("d", d => visualArc(d));
+    // Update shapes (animate only if duration > 0, otherwise set immediately)
+    if (duration && duration > 0) {
+      paths.transition().duration(duration).attr("d", d => visualArc(d));
+    } else {
+      paths.attr("d", d => visualArc(d));
+    }
 
     // Update visibility/interaction per node
     paths.each(function(d) {
@@ -715,14 +731,8 @@ function initBirdFilter() {
       let rotateDeg = (midAngle + Math.PI / 2) * 180 / Math.PI;
       if (rotateDeg > 90 && rotateDeg < 270) rotateDeg += 180;
 
-      node
-        .attr("transform", `translate(${Math.cos(midAngle) * midR},${Math.sin(midAngle) * midR}) rotate(${rotateDeg})`)
-        .text(d.data.name);
-
-      const maxChars = Math.floor(arcLen / 6);
-      if (d.data.name.length > maxChars && maxChars > 3) {
-        node.text(d.data.name.slice(0, maxChars - 1) + "…");
-      }
+      node.attr("transform", `translate(${Math.cos(midAngle) * midR},${Math.sin(midAngle) * midR}) rotate(${rotateDeg})`);
+      fitLabel(node, d.data.name, Math.max(0, arcLen - 6));
     });
   }
 
@@ -735,7 +745,8 @@ function initBirdFilter() {
     const dx = currentRoot.x1 - currentRoot.x0;
     const xScale2 = d3.scaleLinear().domain([x0, x0 + dx]).range([0, 2 * Math.PI]);
     const mappingBaseDepth = Math.max(currentRoot.depth + 1, 1);
-    applyAvailabilityVisuals(mappingBaseDepth, xScale2, 200);
+    // For year-filter updates we want no animation: show new fields instantly
+    applyAvailabilityVisuals(mappingBaseDepth, xScale2, 0);
   };
 
   updateCenter(root);
@@ -784,14 +795,8 @@ function initBirdFilter() {
   updateCenter(target);
   updateLabels(target, xScale2, mappingBaseDepth);
 
-  // Recompute availability values now so angles reflect available leaves
-  // before we let the animation finish. This avoids a race where the
-  // partition is recomputed with the old mapping and then overrides the
-  // zoom animation.
   recomputeAvailabilityValues();
 
-  // After the zoom animation finishes, apply visual updates using the
-  // same xScale2/mappingBaseDepth so geometry remains consistent.
   setTimeout(() => applyAvailabilityVisuals(mappingBaseDepth, xScale2, 200), 650);
 
   onBirdFilterChange(target === root ? null : target.data.name, target.depth);
@@ -838,28 +843,21 @@ function initBirdFilter() {
       let rotateDeg = (midAngle + Math.PI / 2) * 180 / Math.PI;
       if (rotateDeg > 90 && rotateDeg < 270) rotateDeg += 180;
 
-      node
-        .attr("transform", `translate(${Math.cos(midAngle) * midR},${Math.sin(midAngle) * midR}) rotate(${rotateDeg})`)
-        .text(d.data.name);
-
-      const maxChars = Math.floor(arcLen / 6);
-      if (d.data.name.length > maxChars && maxChars > 3) {
-        node.text(d.data.name.slice(0, maxChars - 1) + "…");
-      } else if (maxChars <= 3) {
-        node.text("");
-      }
+      node.attr("transform", `translate(${Math.cos(midAngle) * midR},${Math.sin(midAngle) * midR}) rotate(${rotateDeg})`);
+      // Fit label to arc length using measured text width
+      fitLabel(node, d.data.name, Math.max(0, arcLen - 6));
     });
   }
 
   svg.on("click", () => zoomTo(root));
 }
 
-// ── Karten-Filter-Callback ─────────────────────────────────
+// Karten-Filter-Callback
 function onBirdFilterChange(name, depth) {
   if (typeof filterRoutes === 'function') filterRoutes(name, depth);
 }
 
-// ── Start ──────────────────────────────────────────────────
+// Start
 window.addEventListener("load", () => {
   setTimeout(initBirdFilter, 100);
   window.addEventListener("resize", () => setTimeout(initBirdFilter, 100));
