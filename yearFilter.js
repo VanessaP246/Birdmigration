@@ -47,7 +47,7 @@ function initYearFilter() {
 
   const label = document.createElement('label');
   label.htmlFor   = 'year-range-toggle';
-  label.textContent = 'Zeitspanne wählen';
+  label.textContent = 'Select time period';
   label.style.cursor = 'pointer';
 
   checkRow.appendChild(checkbox);

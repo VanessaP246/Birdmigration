@@ -637,15 +637,15 @@ function buildLegend() {
   // Keep the inner div transparent so the backdrop blur shows through
   div.style.cssText = 'margin-top:12px;color:#fff;font-size:0.72rem;line-height:1.8;background:transparent';
   div.innerHTML = `
-    <div style="font-weight:bold;margin-bottom:4px">Gefährdungsstatus</div>
+    <div style="font-weight:bold;margin-bottom:4px">Red List</div>
     ${Object.entries(RL_LINE_COLOR).filter(([k]) => k).map(([label, color]) =>
       `<div><span style="display:inline-block;width:10px;height:10px;background:${color};border-radius:2px;margin-right:5px"></span>${label}</div>`
     ).join('')}
     <div style="font-weight:bold;margin-top:8px;margin-bottom:4px">Punkte</div>
-    <div style="margin-bottom:6px"><label><input type="checkbox" id="hide-stops-checkbox" ${hideStops ? 'checked' : ''}/> Zwischenstopps ausblenden</label></div>
-    <div>▲ Startpunkt</div>
-    <div>● Zwischenstopp</div>
-    <div>✕ Endpunkt</div>
+    <div style="margin-bottom:6px"><label><input type="checkbox" id="hide-stops-checkbox" ${hideStops ? 'checked' : ''}/> Hide transit locations</label></div>
+    <div>▲ Origin</div>
+    <div>● Transit location</div>
+    <div>✕ Destination</div>
   `;
   legend.appendChild(div);
 
