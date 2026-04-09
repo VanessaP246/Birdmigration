@@ -611,8 +611,26 @@ function clearAllFilters() {
 function buildLegend() {
   const legend = document.querySelector('.legend');
   if (!legend) return;
+ //Gauschner Weichzeichner hinter der Legende
+  try {
+  legend.style.position = 'absolute';
+  legend.style.left = legend.style.left || '12px';
+  legend.style.bottom = legend.style.bottom || '12px';
+  legend.style.zIndex = legend.style.zIndex || '1002';
+  legend.style.background = legend.style.background || 'rgba(8,8,12,0.35)';
+  legend.style.backdropFilter = 'blur(6px)';
+  legend.style.WebkitBackdropFilter = 'blur(6px)';
+  legend.style.borderRadius = legend.style.borderRadius || '8px';
+  legend.style.padding = legend.style.padding || '8px';
+  legend.style.maxWidth = legend.style.maxWidth || '220px';
+  legend.style.maxHeight = legend.style.maxHeight || '36vh';
+  legend.style.overflow = legend.style.overflow || 'auto';
+  legend.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+  } catch (e) {}
+
   const div = document.createElement('div');
-  div.style.cssText = 'margin-top:12px;color:#fff;font-size:0.72rem;line-height:1.8';
+  // Keep the inner div transparent so the backdrop blur shows through
+  div.style.cssText = 'margin-top:12px;color:#fff;font-size:0.72rem;line-height:1.8;background:transparent';
   div.innerHTML = `
     <div style="font-weight:bold;margin-bottom:4px">Gefährdungsstatus</div>
     ${Object.entries(RL_LINE_COLOR).filter(([k]) => k).map(([label, color]) =>

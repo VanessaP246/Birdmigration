@@ -73,6 +73,31 @@ h1 {
   font-weight: bold;
   color: #fff;
   z-index: 100;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: transparent; /* no hard rectangle */
+  position: relative;
+  /* keep size limited so blur does not span full width */
+  display: inline-block;
+}
+
+.heading::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  /* slightly larger than the heading to produce a soft halo */
+  width: calc(100% + 28px);
+  height: calc(100% + 12px);
+  border-radius: 50% / 40%;
+  pointer-events: none;
+  z-index: -1;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  /* fade edges so there is no hard cut-off */
+  mask-image: radial-gradient(ellipse at center, rgba(0,0,0,1) 0%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.25) 65%, rgba(0,0,0,0) 85%);
+  -webkit-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,1) 0%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.25) 65%, rgba(0,0,0,0) 85%);
 }
 
 /* Legende */
