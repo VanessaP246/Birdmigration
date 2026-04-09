@@ -14,8 +14,8 @@ const MONTH_COLORS = [
 
 // Deutsche Monatsnamen (0-basiert: index 0 = Januar)
 const MONTH_NAMES = [
-  'Januar','Februar','März','April','Mai','Juni',
-  'Juli','August','September','Oktober','November','Dezember'
+  'January','February','March','April','May','June',
+  'July','August','September','October','November','December'
 ];
 
 let currentMonthFilter = { startMonth: null, endMonth: null };
@@ -204,7 +204,7 @@ function drawmonthFilter(container, connections) {
         const sName = MONTH_NAMES[s] || (s + 1);
         const tName = MONTH_NAMES[t] || (t + 1);
         showTooltip(svg, event,
-          `${sName} → ${tName}: ${v} routes`);
+          `${sName} → ${tName}: ${v} data points`);
       })
       .on('mouseleave', function() {
         hideTooltip();

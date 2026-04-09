@@ -502,7 +502,7 @@ function buildTooltipHTML(props) {
     </div>
     <div style="margin-top:6px;display:flex;flex-direction:column;gap:6px;">
       ${durationLine ? '<div style="opacity:0.95">' + durationLine + '</div>' : ''}
-      ${props.distanceKm ? '<div>Distanz: ' + props.distanceKm + ' km</div>' : ''}
+      ${props.distanceKm ? '<div>Distance: ' + props.distanceKm + ' km</div>' : ''}
       <div>Route ${props.displayCode || props.code}</div>
       ${props.country ? '<div>' + props.country + '</div>' : ''}
     </div>
