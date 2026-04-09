@@ -18,7 +18,7 @@ let csvRohtext = null;
 
 function preload() {
     // loadStrings lädt die Datei als reinen Text – wir parsen dann selbst
-    csvRohtext = loadStrings('data/Bird migration dataset.csv');
+    csvRohtext = loadStrings('data/Bird migration dataset manipulated.csv');
 }
 
 function setup() {

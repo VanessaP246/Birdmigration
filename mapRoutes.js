@@ -48,6 +48,8 @@ let selectedRouteData = null; // vollständiges Route-Objekt der angeklickten Ro
 let mapReady     = false;
 // Option: Zwischenstopps ausblenden (nur Origin/Destination zeigen)
 let hideStops = false;
+// Für Hover-Symbole (Origin/Destination Hervorhebung)
+let hoveredRoute = null; // code der gehöverten Route
 
 // Tooltips/Infobox
 // Hover-Tooltip (folgt der Maus)
@@ -120,7 +122,7 @@ function buildLayers() {
   const lineFeatures = visible.map(r => ({
     type: 'Feature',
     properties: {
-      code: r.code, species: r.species, rl: r.rl,
+      code: r.code, displayCode: r.displayCode, species: r.species, rl: r.rl,
       country: r.country, year: r.year,
       color: RL_LINE_COLOR[r.rl] || RL_LINE_COLOR[''],
     },
@@ -135,7 +137,7 @@ function buildLayers() {
       pointFeatures.push({
         type: 'Feature',
         properties: {
-          code: r.code, species: r.species, rl: r.rl, node: pt.node,
+          code: r.code, displayCode: r.displayCode, species: r.species, rl: r.rl, node: pt.node,
           color: RL_POINT_COLOR[r.rl] || RL_POINT_COLOR[''],
         },
         geometry: { type: 'Point', coordinates: [pt.lon, pt.lat] }
@@ -173,6 +175,28 @@ function buildLayers() {
       id: 'route-points', type: 'circle', source: 'points',
       paint: { 'circle-radius': POINT_RADIUS, 'circle-color': ['get', 'color'] }
     });
+
+    // Highlight-Symbole für Start- und Endpunkte (nur wenn Route gehovert/ausgewählt)
+    map.addSource('highlight-symbols', { 
+      type: 'geojson', 
+      data: { type: 'FeatureCollection', features: [] } 
+    });
+
+    map.addLayer({
+      id: 'highlight-symbols', type: 'symbol', source: 'highlight-symbols',
+      layout: {
+        'text-field': ['get', 'symbol'],
+        'text-font': ['Open Sans Bold', 'Arial Unicode MS Regular'],
+        'text-size': 24,
+        'text-offset': [0, 0],
+        'text-allow-overlap': true,
+        'text-rotate': ['get', 'rotation']
+      },
+      paint: {
+        'text-color': ['get', 'color'],
+        'text-opacity': 1.0
+      }
+    });
   }
 
   // Auswahl-Stil wiederherstellen wenn Layer neu gebaut wurden
@@ -186,6 +210,14 @@ function registerInteraction() {
   map.on('mousemove', 'route-lines-hitbox', function(e) {
     map.getCanvas().style.cursor = 'pointer';
     const props = e.features[0].properties;
+    const code = props.code;
+    
+    // Nur Update wenn wir nicht gerade eine Route ausgewählt haben
+    if (!selectedRoute) {
+      hoveredRoute = code;
+      updateHighlightSymbols();
+    }
+    
     map.setPaintProperty('route-lines', 'line-width', [
       'case',
       ['==', ['get', 'code'], selectedRoute || ''], LINE_WIDTH_HOVER,
@@ -210,6 +242,8 @@ function registerInteraction() {
   map.on('mouseleave', 'route-lines-hitbox', function() {
     map.getCanvas().style.cursor = '';
     hoverTooltip.style.opacity = '0';
+    hoveredRoute = null;
+    updateHighlightSymbols();
     applySelectionStyle(); // stellt sicher dass ausgewählte Route dick bleibt
   });
 
@@ -248,6 +282,7 @@ function registerInteraction() {
       }
     }
 
+    updateHighlightSymbols();
     applySelectionStyle();
   });
 
@@ -259,6 +294,7 @@ function registerInteraction() {
       selectedRouteData = null;
       selectedRoute_lngLat = null;
       fixedTooltip.style.opacity = '0';
+      updateHighlightSymbols();
       applySelectionStyle();
     }
   });
@@ -300,13 +336,98 @@ function applySelectionStyle() {
     updateMonthFilterConnections(connections);
   }
 }
+
+
+// Symbolarten
+function updateHighlightSymbols() {
+  const activeRoute = selectedRoute || hoveredRoute; // hervorgehobene Route
+  
+  if (!activeRoute || !allRoutes || !map.getSource('highlight-symbols')) {
+    // Wenn keine Route aktiv ist, leere die Highlight-Symbole
+    map.getSource('highlight-symbols').setData({ 
+      type: 'FeatureCollection', 
+      features: [] 
+    });
+    return;
+  }
+
+  // Finde die Route mit dem entsprechenden Code
+  const route = allRoutes.find(r => r.code === activeRoute);
+  if (!route || !route.points || route.points.length === 0) {
+    map.getSource('highlight-symbols').setData({ 
+      type: 'FeatureCollection', 
+      features: [] 
+    });
+    return;
+  }
+
+  // Origin als Dreieck und Destination als Kreuz
+  const highlightFeatures = [];
+  
+  for (let i = 0; i < route.points.length; i++) {
+    const pt = route.points[i];
+    let symbol = null;
+    let rotation = 0;
+    
+    if (pt.node === 'Origin') {
+      symbol = '▲'; // Dreieck
+      if (i + 1 < route.points.length) { 
+        rotation = calculateBearing(pt, route.points[i + 1]); // Dreieck wird so rotiert, dass es zum nächsten Punkt zeigt
+      }
+    } else if (pt.node === 'Destination') {
+      symbol = '✕'; // Kreuz
+      if (i > 0) {
+        rotation = calculateBearing(route.points[i - 1], pt); // Kreuz wird so rotiert, dass es zum nächsten Punkt zeigt
+      }
+    }
+    
+    if (symbol) {
+      highlightFeatures.push({
+        type: 'Feature',
+        properties: {
+          code: route.code,
+          species: route.species,
+          rl: route.rl,
+          node: pt.node,
+          color: RL_POINT_COLOR[route.rl] || RL_POINT_COLOR[''],
+          symbol: symbol,
+          rotation: rotation
+        },
+        geometry: { type: 'Point', coordinates: [pt.lon, pt.lat] }
+      });
+    }
+  }
+
+  // Aktualisiere die Highlight-Symbole Daten
+  map.getSource('highlight-symbols').setData({ 
+    type: 'FeatureCollection', 
+    features: highlightFeatures 
+  });
+}
+
+// Berechnet das Bearing (Azimut) zwischen zwei Punkten in Grad (0-360)
+// 0° = Nord, 90° = Ost, 180° = Süd, 270° = West
+function calculateBearing(from, to) {
+  const lat1 = from.lat * Math.PI / 180;
+  const lat2 = to.lat * Math.PI / 180;
+  const dLon = (to.lon - from.lon) * Math.PI / 180;
+
+  const y = Math.sin(dLon) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+  let bearing = Math.atan2(y, x) * 180 / Math.PI;
+  
+  // Normalisiere auf 0-360 Grad
+  bearing = (bearing + 360) % 360;
+  
+  return bearing;
+}
 // Tooltip HTML
 function buildTooltipHTML(props) {
   const rlColor = RL_LINE_COLOR[props.rl] || '#fff';
   return `
     <strong style="font-size:0.85rem">${props.species}</strong><br>
     <span style="color:${rlColor}">${props.rl || 'Unbekannt'}</span><br>
-    Route ${props.code}<br>
+    Route ${props.displayCode || props.code}<br>
     ${props.country ? props.country + '<br>' : ''}
     ${props.year    ? 'Jahr: ' + props.year  : ''}
   `;
@@ -349,8 +470,9 @@ function getVisibleRoutes() {
 function parseRoutes(table) {
   const routeMap = {};
   for (let i = 0; i < table.getRowCount(); i++) {
+    const id      = parseInt(table.getString(i, 'ID').trim());
     const code    = table.getString(i, 'Migratory route codes').trim();
-    const node    = table.getString(i, 'Migration nodes').trim();
+    const doi     = table.getString(i, 'DOI').trim();
     const species = table.getString(i, 'English Name').trim();
     const order   = table.getString(i, 'Bird orders').trim();
     const family  = table.getString(i, 'Bird families').trim();
@@ -362,13 +484,29 @@ function parseRoutes(table) {
     const country = table.getString(i, 'Countries').trim();
     const lon = parseFloat(table.getString(i, 'GPS_xx').replace(',', '.'));
     const lat = parseFloat(table.getString(i, 'GPS_yy').replace(',', '.'));
-    if (!code || isNaN(lon) || isNaN(lat)) continue;
-    if (!routeMap[code]) {
-      routeMap[code] = { code, species, order, family, genus, rl, month, endMonth, year, country, points: [] };
+    if (!code || isNaN(lon) || isNaN(lat) || isNaN(id)) continue;
+
+    // Zusammengesetzter Schlüssel: Route Code führt nämlich zu Fehlern in der Darstellung
+    const key = code + '||' + doi;
+    if (!routeMap[key]) {
+      routeMap[key] = { code: key, displayCode: code, species, order, family, genus, rl, month, endMonth, year, country, points: [] };
     }
-    routeMap[code].points.push({ lon, lat, node });
+    routeMap[key].points.push({ lon, lat, id });
   }
-  return Object.values(routeMap);
+
+  // Punkte nach ID sortieren und node-Rolle aus Position ableiten (nicht aus CSV)
+  for (const route of Object.values(routeMap)) {
+    route.points.sort((a, b) => a.id - b.id);
+    const last = route.points.length - 1;
+    route.points.forEach((pt, idx) => {
+      if (idx === 0)    pt.node = 'Origin';
+      else if (idx === last) pt.node = 'Destination';
+      else              pt.node = 'Transit locations';
+    });
+  }
+
+  // Routen mit weniger als 2 Punkten herausfiltern – kein Linienzug möglich
+  return Object.values(routeMap).filter(r => r.points.length >= 2);
 }
 
 // Gibt nur die Monatsverbindungen zurück, für die in den sichtbaren Routen Daten existieren
