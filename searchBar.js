@@ -155,7 +155,7 @@ async function searchOpenStreetMap(query) {
 
   try {
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=8`,
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=8&polygon_geojson=1`,
       {
         headers: {
           'User-Agent': 'BirdMigrationApp'
@@ -175,7 +175,8 @@ async function searchOpenStreetMap(query) {
       lon: parseFloat(item.lon),
       lat: parseFloat(item.lat),
       boundingbox: item.boundingbox, // [minlat, maxlat, minlon, maxlon]
-      displayName: item.display_name
+      displayName: item.display_name,
+      geojson: item.geojson || null  // Polygon/MultiPolygon für Grenzen
     })).filter(item => !isNaN(item.lon) && !isNaN(item.lat));
   } catch (e) {
     console.error('OSM API error:', e);
@@ -304,8 +305,9 @@ function displaySuggestions(results, container, input) {
       const icon = getLocationIcon(geo.category, geo.type);
       const displayText = geo.name || geo.displayName;
       const boundingboxJSON = geo.boundingbox ? JSON.stringify(geo.boundingbox) : '';
+      const geojsonJSON = geo.geojson ? JSON.stringify(geo.geojson) : '';
       html += `
-        <div class="searchBar-suggestionItem searchBar-geolocation" data-type="geolocation" data-value="${escapeHtml(displayText)}" data-lon="${geo.lon}" data-lat="${geo.lat}" data-name="${escapeHtml(geo.name)}" data-type-osm="${escapeHtml(geo.type)}" data-boundingbox='${boundingboxJSON}'>
+        <div class="searchBar-suggestionItem searchBar-geolocation" data-type="geolocation" data-value="${escapeHtml(displayText)}" data-lon="${geo.lon}" data-lat="${geo.lat}" data-name="${escapeHtml(geo.name)}" data-type-osm="${escapeHtml(geo.type)}" data-boundingbox='${boundingboxJSON}' data-geojson='${geojsonJSON}'>
           <div class="searchBar-suggestionIcon">${icon}</div>
           <div class="searchBar-suggestionText">
             <div class="searchBar-suggestionTitle">${escapeHtml(geo.name)}</div>
@@ -358,7 +360,7 @@ function displaySuggestions(results, container, input) {
   }
 }
 
-function onSuggestionSelected(item, input, container) {
+async function onSuggestionSelected(item, input, container) {
   const type = item.dataset.type;
   const value = item.dataset.value;
 
@@ -369,55 +371,37 @@ function onSuggestionSelected(item, input, container) {
     // Vogel-Filter setzen
     activeFilters = [{ type: 'species', name: value }];
     selectedRoute = null;
-    // Marker entfernen wenn Vogel ausgewählt wird
     removeSearchMarker();
-  } else if (type === 'location' || type === 'geolocation') {
-    // Auf den Ort zoomen
-    const lon = parseFloat(item.dataset.lon);
-    const lat = parseFloat(item.dataset.lat);
-    const osmType = item.dataset.typeOsm || '';
-    const name = item.dataset.name || value;
 
-    if (typeof map !== 'undefined' && map) {
-      // Marker setzen
-      addSearchMarker(lon, lat, name);
+  } else if (type === 'location') {
+    // CSV-Land: Koordinaten & GeoJSON über Nominatim holen
+    activeFilters = [];
+    try {
+      const geoResults = await searchOpenStreetMap(value);
+      const best = geoResults.find(r =>
+        r.type === 'Country' || r.type === 'State' ||
+        r.category === 'boundary' || r.category === 'place'
+      ) || geoResults[0];
 
-      // Bounds basierend auf OSM-Bounding-Box (wenn vorhanden) oder Standardzoom
-      const boundingbox = item.dataset.boundingbox;
-      
-      if (boundingbox && boundingbox.length >= 4) {
-        // Bounding Box verwenden: [minlat, maxlat, minlon, maxlon]
-        const bounds = JSON.parse(boundingbox);
-        map.fitBounds(
-          [
-            [parseFloat(bounds[2]), parseFloat(bounds[0])], // Southwest
-            [parseFloat(bounds[3]), parseFloat(bounds[1])]   // Northeast
-          ],
-          {
-            padding: 50,
-            duration: 1500,
-            maxZoom: 15
-          }
-        );
-      } else {
-        // Fallback: flyTo mit angepasstem Zoom-Level
-        let zoom = 6;
-        if (osmType.includes('Country')) zoom = 4;
-        else if (osmType.includes('City') || osmType.includes('Town')) zoom = 10;
-        else if (osmType.includes('Street') || osmType.includes('Road')) zoom = 14;
-        else if (osmType.includes('Mountain') || osmType.includes('Water') || osmType.includes('Waterway')) zoom = 9;
-        else if (osmType.includes('Village') || osmType.includes('Hamlet')) zoom = 12;
-
-        map.flyTo({
-          center: [lon, lat],
-          zoom: zoom,
-          duration: 1500
-        });
+      if (best) {
+        _applyLocationResult(best, value);
       }
+    } catch (e) {
+      console.error('Geocoding error for CSV location:', e);
     }
 
-    // Keine Filter setzen, nur zoomen
+  } else if (type === 'geolocation') {
+    // OSM-Ergebnis: Daten direkt aus data-Attributen
     activeFilters = [];
+    const lon = parseFloat(item.dataset.lon);
+    const lat = parseFloat(item.dataset.lat);
+    const name = item.dataset.name || value;
+    const boundingboxRaw = item.dataset.boundingbox;
+    const boundingbox = boundingboxRaw ? JSON.parse(boundingboxRaw) : null;
+    const geojsonRaw = item.dataset.geojson;
+    const geojson = geojsonRaw ? JSON.parse(geojsonRaw) : null;
+
+    _applyLocationResult({ lon, lat, name, boundingbox, geojson, type: item.dataset.typeOsm || '' }, name);
   }
 
   // Karte aktualisieren
@@ -425,12 +409,26 @@ function onSuggestionSelected(item, input, container) {
   if (typeof applySelectionStyle === 'function') applySelectionStyle();
 }
 
-// Marker für gesuchten Ort hinzufügen
-function addSearchMarker(lon, lat, name) {
-  // Alten Marker entfernen wenn vorhanden
+// Gemeinsame Logik: Boundary oder Marker setzen + Karte zoomen
+function _applyLocationResult(result, name) {
+  if (typeof map === 'undefined' || !map) return;
+
+  const hasBoundary = result.geojson &&
+    (result.geojson.type === 'Polygon' || result.geojson.type === 'MultiPolygon');
+
+  if (hasBoundary) {
+    // Landesgrenze zeichnen
+    addSearchBoundary(result.geojson, result.boundingbox, name);
+  } else {
+    // Punkt-Marker setzen (mit fitBounds falls BoundingBox vorhanden)
+    addSearchMarker(result.lon, result.lat, name, result.boundingbox);
+  }
+}
+
+// Punkt-Marker für gesuchten Ort setzen und auf BoundingBox zoomen
+function addSearchMarker(lon, lat, name, boundingbox) {
   removeSearchMarker();
 
-  // Neuen Marker erstellen mit HTML-Element
   const el = document.createElement('div');
   el.className = 'search-marker';
   el.style.width = '30px';
@@ -451,21 +449,86 @@ function addSearchMarker(lon, lat, name) {
       .setLngLat([lon, lat])
       .addTo(map);
 
-    // Popup beim Klick
     el.addEventListener('click', () => {
       new maplibregl.Popup({ offset: 25 })
         .setHTML(`<strong>${escapeHtml(name)}</strong>`)
         .setLngLat([lon, lat])
         .addTo(map);
     });
+
+    // Immer fitBounds verwenden damit der Ort zentriert & vollständig sichtbar ist
+    if (boundingbox && boundingbox.length >= 4) {
+      map.fitBounds(
+        [
+          [parseFloat(boundingbox[2]), parseFloat(boundingbox[0])], // SW
+          [parseFloat(boundingbox[3]), parseFloat(boundingbox[1])]  // NE
+        ],
+        { padding: 60, duration: 1500, maxZoom: 14 }
+      );
+    } else {
+      map.flyTo({ center: [lon, lat], zoom: 8, duration: 1500 });
+    }
   }
 }
 
-// Marker entfernen
+// Landesgrenze als GeoJSON-Layer auf der Karte zeichnen
+function addSearchBoundary(geojson, boundingbox, name) {
+  removeSearchMarker(); // Alten Marker/Layer entfernen
+
+  if (typeof map === 'undefined' || !map) return;
+
+  // GeoJSON-Source und Layer hinzufügen
+  map.addSource('search-boundary', {
+    type: 'geojson',
+    data: geojson
+  });
+
+  // Halbtransparente Füllung
+  map.addLayer({
+    id: 'search-boundary-fill',
+    type: 'fill',
+    source: 'search-boundary',
+    paint: {
+      'fill-color': SEARCH_MARKER_COLOR,
+      'fill-opacity': 0.12
+    }
+  });
+
+  // Deutliche Outline
+  map.addLayer({
+    id: 'search-boundary-line',
+    type: 'line',
+    source: 'search-boundary',
+    paint: {
+      'line-color': SEARCH_MARKER_COLOR,
+      'line-width': 2.5,
+      'line-opacity': 0.9
+    }
+  });
+
+  // Land vollständig und zentriert anzeigen
+  if (boundingbox && boundingbox.length >= 4) {
+    map.fitBounds(
+      [
+        [parseFloat(boundingbox[2]), parseFloat(boundingbox[0])], // SW
+        [parseFloat(boundingbox[3]), parseFloat(boundingbox[1])]  // NE
+      ],
+      { padding: 40, duration: 1500 }
+    );
+  }
+}
+
+// Marker und Boundary-Layer entfernen
 function removeSearchMarker() {
   if (searchMarker) {
     searchMarker.remove();
     searchMarker = null;
+  }
+
+  if (typeof map !== 'undefined' && map) {
+    if (map.getLayer('search-boundary-fill')) map.removeLayer('search-boundary-fill');
+    if (map.getLayer('search-boundary-line')) map.removeLayer('search-boundary-line');
+    if (map.getSource('search-boundary')) map.removeSource('search-boundary');
   }
 }
 
