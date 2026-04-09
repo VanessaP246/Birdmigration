@@ -399,6 +399,19 @@ const COLOR_GROUPS = [
   ["#ECEBF6", "#C5C2E5", "#9E99D3", "#7E7AA9"],
 ];
 
+// ── Sanitizer für SVG-Pfade (Floating-Point Fehler beheben) ────────────────
+// D3's arc() kann bei padAngle zu ungültigen Flags führen (z.B. 0.0013720000000000004 statt 0)
+function sanitizeSVGPath(pathString) {
+  if (!pathString) return pathString;
+  // SVG Arc-Flags müssen 0 oder 1 sein. Rundungsfehler zu 0 runden wenn < 0.5
+  return pathString.replace(/([A-Z])([\d.]+),([\d.]+),([\d.]+),([\d.\-]+),([\d.\-]+)/gi, (match, cmd, rx, ry, xAxisRotation, largeArc, sweep) => {
+    // Flags normalisieren: Werte < 0.5 -> 0, >= 0.5 -> 1
+    const largeArcFixed = parseFloat(largeArc) >= 0.5 ? 1 : 0;
+    const sweepFixed = parseFloat(sweep) >= 0.5 ? 1 : 0;
+    return `${cmd}${rx},${ry},${xAxisRotation},${largeArcFixed},${sweepFixed}`;
+  });
+}
+
 // ── Globale Referenz auf updateAvailability ────────────────
 // Wird von yearFilter.js aufgerufen wenn der Jahresfilter sich ändert
 let _updateBirdAvailability = null;
@@ -447,6 +460,9 @@ function initBirdFilter() {
     .outerRadius(d => x1Scale(d))
     .padAngle(0.012)
     .padRadius(radius / 2);
+  
+  // Wrappee die arc-Funktion um Pfade zu bereinigen
+  const arcSafe = d => sanitizeSVGPath(arc(d));
 
   const colorMap = {};
   root.children.forEach((d, i) => {
@@ -482,7 +498,7 @@ function initBirdFilter() {
   const paths = g.selectAll("path")
     .data(root.descendants().filter(d => d.depth > 0))
     .join("path")
-    .attr("d", arc)
+    .attr("d", arcSafe)
     .attr("fill", d => getColor(d))
     .attr("cursor", "pointer")
     .on("mouseover", function(event, d) {
@@ -604,8 +620,11 @@ function initBirdFilter() {
       .padAngle(0.012)
       .padRadius(radius / 2);
 
+    // Wrapper für visualArc um Pfade zu bereinigen
+    const visualArcSafe = d => sanitizeSVGPath(visualArc(d));
+
     // Update shapes
-    paths.transition().duration(duration).attr("d", d => visualArc(d));
+    paths.transition().duration(duration).attr("d", visualArcSafe);
 
     // Update visibility/interaction per node
     paths.each(function(d) {
