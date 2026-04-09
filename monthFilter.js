@@ -204,7 +204,7 @@ function drawmonthFilter(container, connections) {
         const sName = MONTH_NAMES[s] || (s + 1);
         const tName = MONTH_NAMES[t] || (t + 1);
         showTooltip(svg, event,
-          `${sName} → ${tName}: ${v} routes`);
+          `${sName} → ${tName}: ${v} data points`);
       })
       .on('mouseleave', function() {
         hideTooltip();

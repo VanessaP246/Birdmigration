@@ -596,7 +596,7 @@ function initBirdFilter() {
       tooltip
         .html(`<strong style="font-size:0.85rem">${d.data.name}</strong><br>
                ${DEPTH_LABEL[d.depth]}<br>
-               ${d.value.toLocaleString()} Datenpunkte`)
+               ${d.value.toLocaleString()} data points`)
         .style("opacity", 1);
     })
     .on("mousemove", function(event) {
