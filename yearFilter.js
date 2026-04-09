@@ -28,6 +28,10 @@ function initYearFilter() {
   container.style.padding  = '0 20px';
   container.style.boxSizing = 'border-box';
 
+  // Used to suppress click events immediately after a drag so the
+  // sliderWrap click handler doesn't jump the thumbs when releasing.
+  let suppressClick = false;
+
   // Checkbox-Zeile oben
   const checkRow = document.createElement('div');
   checkRow.style.cssText = `
@@ -91,13 +95,13 @@ function initYearFilter() {
   // Linkes Extrem-Jahr
   const labelMin = document.createElement('span');
   labelMin.textContent = YEAR_MIN;
-  labelMin.style.cssText = 'position: absolute; left: 0;';
+  labelMin.style.cssText = `position: absolute; left: 0; bottom: 0; font-size: 0.72rem; color: ${TEXT_COLOR};`;
   labelRow.appendChild(labelMin);
 
   // Rechtes Extrem-Jahr
   const labelMax = document.createElement('span');
   labelMax.textContent = YEAR_MAX;
-  labelMax.style.cssText = 'position: absolute; right: 0;';
+  labelMax.style.cssText = `position: absolute; right: 0; bottom: 0; font-size: 0.72rem; color: ${TEXT_COLOR};`;
   labelRow.appendChild(labelMax);
 
   // Schwebendes Jahr unter dem linken Zeiger
@@ -132,7 +136,7 @@ function render() {
   const fromIsExtreme = (yearFrom === YEAR_MIN || yearFrom === YEAR_MAX);
   bubbleFrom.style.opacity = fromIsExtreme ? '0' : '1';
   if (!fromIsExtreme) {
-    const bFromLeft = clamp(fromPct * 100, 3, 90);
+    const bFromLeft = (fromPct * 100);
     bubbleFrom.style.left      = bFromLeft + '%';
     bubbleFrom.style.transform = 'translateX(-50%)';
     bubbleFrom.textContent     = yearFrom;
@@ -143,7 +147,7 @@ function render() {
     const toIsExtreme = (yearTo === YEAR_MIN || yearTo === YEAR_MAX);
     bubbleTo.style.opacity = toIsExtreme ? '0' : '1';
     if (!toIsExtreme) {
-      const bToLeft = clamp(toPct * 100, 10, 97);
+      const bToLeft = (toPct * 100);
       bubbleTo.style.left      = bToLeft + '%';
       bubbleTo.style.transform = 'translateX(-50%)';
       bubbleTo.textContent     = yearTo;
@@ -155,6 +159,54 @@ function render() {
   // Extrem-Labels fett wenn Zeiger drauf steht
   labelMin.style.fontWeight = (yearFrom === YEAR_MIN || (rangeMode && yearTo === YEAR_MIN)) ? 'bold' : 'normal';
   labelMax.style.fontWeight = (yearFrom === YEAR_MAX || (rangeMode && yearTo === YEAR_MAX)) ? 'bold' : 'normal';
+
+  //Gauschner Weichzeichner
+  try {
+    if (!fromIsExtreme) {
+      const rBubble = bubbleFrom.getBoundingClientRect();
+      const rLabel  = labelMin.getBoundingClientRect();
+      const overlap = !(rBubble.right < rLabel.left || rBubble.left > rLabel.right || rBubble.bottom < rLabel.top || rBubble.top > rLabel.bottom);
+      if (overlap) {
+        labelMin.style.filter = 'blur(2px)';
+        labelMin.style.opacity = '0.85';
+      } else {
+        labelMin.style.filter = 'none';
+        labelMin.style.opacity = '1';
+      }
+    } else {
+      labelMin.style.filter = 'none';
+      labelMin.style.opacity = '1';
+    }
+
+    if (rangeMode && bubbleTo.style.opacity !== '0') {
+      const rBubble2 = bubbleTo.getBoundingClientRect();
+      const rLabel2  = labelMax.getBoundingClientRect();
+      const overlap2 = !(rBubble2.left > rLabel2.right || rBubble2.right < rLabel2.left || rBubble2.bottom < rLabel2.top || rBubble2.top > rLabel2.bottom);
+      if (overlap2) {
+        labelMax.style.filter = 'blur(2px)';
+        labelMax.style.opacity = '0.85';
+      } else {
+        labelMax.style.filter = 'none';
+        labelMax.style.opacity = '1';
+      }
+    } else if (!rangeMode && !fromIsExtreme) {
+      const rBubbleF = bubbleFrom.getBoundingClientRect();
+      const rLabel2  = labelMax.getBoundingClientRect();
+      const overlapF = !(rBubbleF.left > rLabel2.right || rBubbleF.right < rLabel2.left || rBubbleF.bottom < rLabel2.top || rBubbleF.top > rLabel2.bottom);
+      if (overlapF) {
+        labelMax.style.filter = 'blur(2px)';
+        labelMax.style.opacity = '0.85';
+      } else {
+        labelMax.style.filter = 'none';
+        labelMax.style.opacity = '1';
+      }
+    } else {
+      labelMax.style.filter = 'none';
+      labelMax.style.opacity = '1';
+    }
+  } catch (e) {
+    // getBoundingClientRect may fail if elements not in DOM yet — ignore gracefully
+  }
 }
   // Drag-Logik für einen Zeiger
   function makeDraggable(thumb, isTo) {
@@ -162,6 +214,7 @@ function render() {
 
     thumb.addEventListener('mousedown', e => {
       dragging = true;
+      suppressClick = true;
       e.preventDefault();
     });
 
@@ -181,10 +234,10 @@ function render() {
       onYearFilterChange(yearFrom, rangeMode ? yearTo : yearFrom);
     });
 
-    document.addEventListener('mouseup', () => { dragging = false; });
+  document.addEventListener('mouseup', () => { dragging = false; setTimeout(() => { suppressClick = false; }, 50); });
 
     // Touch-Support
-    thumb.addEventListener('touchstart', e => { dragging = true; e.preventDefault(); });
+      thumb.addEventListener('touchstart', e => { dragging = true; suppressClick = true; e.preventDefault(); });
     document.addEventListener('touchmove', e => {
       if (!dragging) return;
       const touch = e.touches[0];
@@ -196,12 +249,13 @@ function render() {
       render();
       onYearFilterChange(yearFrom, rangeMode ? yearTo : yearFrom);
     });
-    document.addEventListener('touchend', () => { dragging = false; });
+      document.addEventListener('touchend', () => { dragging = false; setTimeout(() => { suppressClick = false; }, 50); });
   }
 
   // Klick auf die Schiene – Zeiger an Klick-Position setzen
 sliderWrap.addEventListener('click', e => {
-  // Klicks auf die Zeiger selbst ignorieren
+    if (suppressClick) { suppressClick = false; return; }
+    // Klicks auf die Zeiger selbst ignorieren
   if (e.target === thumbFrom || e.target === thumbTo) return;
 
   const rect = sliderWrap.getBoundingClientRect();
@@ -241,6 +295,7 @@ fill.style.cursor = 'grab';
 
 fill.addEventListener('mousedown', e => {
   if (!rangeMode) return;
+  suppressClick = true;
   spanDragging     = true;
   spanDragStartX    = e.clientX;
   spanDragStartFrom = yearFrom;
@@ -274,6 +329,8 @@ document.addEventListener('mouseup', () => {
   if (spanDragging) {
     spanDragging      = false;
     fill.style.cursor = 'grab';
+    suppressClick = true;
+    setTimeout(() => { suppressClick = false; }, 50);
   }
 });
 
@@ -307,7 +364,7 @@ document.addEventListener('touchmove', e => {
   onYearFilterChange(yearFrom, yearTo);
 });
 
-document.addEventListener('touchend', () => { spanDragging = false; });
+document.addEventListener('touchend', () => { spanDragging = false; suppressClick = true; setTimeout(() => { suppressClick = false; }, 50); });
 
   makeDraggable(thumbFrom, false);
   makeDraggable(thumbTo,   true);
