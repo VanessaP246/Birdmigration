@@ -65,6 +65,34 @@
 
           // Karte im Fullscreen
           map.addControl(new maplibregl.FullscreenControl());
+
+          // Warte bis die Karte geladen ist, dann füge Bird Migration Dataset zur Attribution hinzu
+          map.on('load', () => {
+            setTimeout(() => {
+              // Finde den Attribution-Button
+              const attributionButton = document.querySelector('.maplibregl-ctrl-attrib-button');
+              if (attributionButton && attributionButton.parentElement) {
+                // Finde oder erstelle die Attribution-Liste
+                let attributionList = document.querySelector('.maplibregl-ctrl-attrib-inner');
+                if (!attributionList) {
+                  attributionList = attributionButton.parentElement.querySelector('.maplibregl-ctrl-attrib-inner');
+                }
+                
+                if (attributionList) {
+                  // Erstelle ein neues Element für Bird Migration Dataset
+                  const datasetAttribution = document.createElement('a');
+                  datasetAttribution.href = 'https://figshare.com/articles/dataset/A_global_dataset_of_directional_migration_networks_of_migratory_birds/26162269?file=48041545';
+                  datasetAttribution.target = '_blank';
+                  datasetAttribution.rel = 'noopener';
+                  datasetAttribution.innerHTML = 'Bird Migration data set';
+                  datasetAttribution.style.cssText = 'display: block; margin-top: 4px; text-align: right; font-size: 0.85rem; color: #64c8ff;';
+                  
+                  attributionList.appendChild(document.createElement('br'));
+                  attributionList.appendChild(datasetAttribution);
+                }
+              }
+            }, 500);
+          });
         </script>
 
         <div class="title"></div>
