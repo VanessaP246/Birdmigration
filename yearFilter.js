@@ -8,6 +8,8 @@ const YEAR_MAX = 2023; // neuestes Jahr im Datensatz
 let yearFrom   = YEAR_MIN; // linker Zeiger
 let yearTo     = YEAR_MAX; // rechter Zeiger (nur im Zeitspannen-Modus aktiv)
 let rangeMode  = false;    // false = Einzeljahr, true = Zeitspanne
+let isPlaying  = false;    // autoplay state
+let playTimer  = null;     // interval id for autoplay
 
 // Farben
 const TRACK_BG    = '#2E4A42'; // Hintergrund der Schiene
@@ -55,9 +57,86 @@ function initYearFilter() {
   container.appendChild(checkRow);
 
   // Slider-Bereich
+  // Controls row: play button + slider
+  const controlsRow = document.createElement('div');
+  // increase gap so play button has more breathing room
+  controlsRow.style.cssText = 'display:flex; align-items:center; gap:12px;';
+
+  const playButton = document.createElement('button');
+  playButton.type = 'button';
+  playButton.setAttribute('aria-label', 'Play timeline');
+  playButton.style.cssText = `
+    width:28px; height:28px; border-radius:6px; border:none; background:#3A5D53; color:#fff;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px;
+  `;
+  // Icon render
+  function updatePlayIcon() {
+    playButton.textContent = isPlaying ? '⏸' : '▶';
+  }
+
+  // Start/stop playback
+  function startPlayback() {
+    if (isPlaying) return;
+    // If we're already at the end, reset to start so playback goes from the beginning
+    if (!rangeMode && yearFrom >= YEAR_MAX) {
+      yearFrom = YEAR_MIN;
+    } else if (rangeMode && yearTo >= YEAR_MAX) {
+      // preserve span length
+      const span = yearTo - yearFrom;
+      yearFrom = YEAR_MIN;
+      yearTo = Math.min(YEAR_MAX, yearFrom + span);
+    }
+    render();
+    isPlaying = true; updatePlayIcon();
+    const tickMs = 300; // advance 1 year every tick
+    playTimer = setInterval(() => {
+      if (!rangeMode) {
+        if (yearFrom < YEAR_MAX) {
+          yearFrom = Math.min(YEAR_MAX, yearFrom + 1);
+          render(); onYearFilterChange(yearFrom, yearFrom);
+        } else {
+          // natural finish: stop and reset to start
+          stopPlayback();
+          yearFrom = YEAR_MIN;
+          render();
+          onYearFilterChange(yearFrom, rangeMode ? yearTo : yearFrom);
+        }
+      } else {
+        const span = yearTo - yearFrom;
+        if (yearTo < YEAR_MAX) {
+          yearFrom = Math.min(YEAR_MAX - span, yearFrom + 1);
+          yearTo = yearFrom + span;
+          render(); onYearFilterChange(yearFrom, yearTo);
+        } else {
+          // natural finish: stop and reset to start of span
+          stopPlayback();
+          yearFrom = YEAR_MIN;
+          yearTo = Math.min(YEAR_MAX, yearFrom + span);
+          render();
+          onYearFilterChange(yearFrom, yearTo);
+        }
+      }
+    }, tickMs);
+  }
+
+  function stopPlayback() {
+    if (!isPlaying) return;
+    isPlaying = false; updatePlayIcon();
+    if (playTimer) { clearInterval(playTimer); playTimer = null; }
+  }
+
+  playButton.addEventListener('click', () => {
+    if (isPlaying) stopPlayback(); else startPlayback();
+  });
+
+  updatePlayIcon();
+
   const sliderWrap = document.createElement('div');
-  sliderWrap.style.cssText = 'position: relative; width: 100%; height: 36px;';
-  container.appendChild(sliderWrap);
+  // make the slider flexible so the play button has reserved space
+  sliderWrap.style.cssText = 'position: relative; flex: 1 1 auto; min-width:80px; height: 36px;';
+  controlsRow.appendChild(playButton);
+  controlsRow.appendChild(sliderWrap);
+  container.appendChild(controlsRow);
 
   // Schiene (Hintergrund)
   const track = document.createElement('div');
@@ -86,9 +165,12 @@ function initYearFilter() {
 
   // Beschriftungen
   const labelRow = document.createElement('div');
+  // shift the label row to line up with the (shorter) slider that has a
+  // play button to its left. Offset = playButton width (28px) + gap (12px) = 40px
   labelRow.style.cssText = `
-    position: relative; width: 100%;
+    position: relative;
     margin-top: 6px; height: 18px; font-size: 0.7rem; color: ${TEXT_COLOR};
+    margin-left: 40px; width: calc(100% - 40px);
   `;
   container.appendChild(labelRow);
 
@@ -213,6 +295,8 @@ function render() {
     let dragging = false;
 
     thumb.addEventListener('mousedown', e => {
+      // stop autoplay when user starts dragging
+      stopPlayback();
       dragging = true;
       suppressClick = true;
       e.preventDefault();
@@ -254,7 +338,9 @@ function render() {
 
   // Klick auf die Schiene – Zeiger an Klick-Position setzen
 sliderWrap.addEventListener('click', e => {
-    if (suppressClick) { suppressClick = false; return; }
+  // stop autoplay if user clicked on the timeline
+  try { stopPlayback(); } catch (e) {}
+  if (suppressClick) { suppressClick = false; return; }
     // Klicks auf die Zeiger selbst ignorieren
   if (e.target === thumbFrom || e.target === thumbTo) return;
 
@@ -295,6 +381,8 @@ fill.style.cursor = 'grab';
 
 fill.addEventListener('mousedown', e => {
   if (!rangeMode) return;
+  // stop autoplay when user starts interacting with the span
+  try { stopPlayback(); } catch (e) {}
   suppressClick = true;
   spanDragging     = true;
   spanDragStartX    = e.clientX;
@@ -337,6 +425,7 @@ document.addEventListener('mouseup', () => {
 // Touch-Support für die Zeitspanne
 fill.addEventListener('touchstart', e => {
   if (!rangeMode) return;
+  try { stopPlayback(); } catch (err) {}
   spanDragging      = true;
   spanDragStartX    = e.touches[0].clientX;
   spanDragStartFrom = yearFrom;
