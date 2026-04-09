@@ -600,10 +600,41 @@ function initBirdFilter() {
         .style("opacity", 1);
     })
     .on("mousemove", function(event) {
+      // Position the tooltip next to the cursor, but if it would overflow
+      // the right side of the container, flip it to the left of the cursor.
       const rect = container.getBoundingClientRect();
+      const tooltipEl = tooltip.node();
+      const padding = 12; // space from cursor
+      const cursorX = event.clientX - rect.left;
+      const cursorY = event.clientY - rect.top;
+
+      let left = cursorX + padding;
+      let top = cursorY - 10;
+
+      if (tooltipEl) {
+        // Measure tooltip size
+        const ttRect = tooltipEl.getBoundingClientRect();
+        const ttWidth = ttRect.width || tooltipEl.offsetWidth || 0;
+        const ttHeight = ttRect.height || tooltipEl.offsetHeight || 0;
+
+        // If tooltip would overflow right edge of container, place it to the left
+        if (left + ttWidth > rect.width - 8) {
+          left = cursorX - ttWidth - padding;
+          // If flipping still goes off the left edge, clamp it inside container
+          if (left < 8) left = Math.max(8, rect.width - ttWidth - 8);
+        }
+
+        // If tooltip would overflow bottom, move it up (clamp)
+        if (top + ttHeight > rect.height - 8) {
+          top = Math.max(8, rect.height - ttHeight - 8);
+        }
+        // If tooltip would overflow top, clamp it
+        if (top < 8) top = 8;
+      }
+
       tooltip
-        .style("left", (event.clientX - rect.left + 12) + "px")
-        .style("top",  (event.clientY - rect.top  - 10) + "px");
+        .style("left", left + "px")
+        .style("top",  top + "px");
     })
     .on("mouseout", function() {
       d3.select(this).attr("opacity", 1);
