@@ -1,8 +1,15 @@
 // Non-Ribbon Chord Diagram for Bird Migration Months
 
+// Farben sortiert
+// const MONTH_COLORS = [
+//   '#3A5D53', '#A1C181', '#858C4A', '#E9C46A', '#F4A261', '#E76F51',
+//   '#CE6A85', '#A95B4C', '#A67458', '#9E99D3', '#398CBF', '#4C54A9'
+// ];
+
+// Farben wie bei birdFilter
 const MONTH_COLORS = [
-  '#3A5D53', '#A1C181', '#858C4A', '#E9C46A', '#F4A261', '#E76F51',
-  '#CE6A85', '#A95B4C', '#A67458', '#9E99D3', '#398CBF', '#4C54A9'
+  '#3A5D53', '#E9C46A', '#A95B4C', '#4C54A9', '#7AB8BF', '#A1C181',
+  '#F4A261', '#E76F51', '#398CBF', '#8A4CA9', '#A67458', '#CE6A85'
 ];
 
 let currentMonthFilter = { startMonth: null, endMonth: null };
