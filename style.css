@@ -105,15 +105,15 @@ h1 {
   position: absolute;
   bottom: 14px;
   left: 14px;
-  width: 190px; 
+  width: 190px;
   height: auto;
-  max-height: calc(100% - 28px);
-  overflow-y: auto;
+  max-height: none; /* no max height so legend can expand to fit content */
+  overflow-y: visible; /* show all content without scrolling */
   border: none;
   border-radius: 8px;
   background: #ffffff50;
   padding: 10px;
-  color: #fff;
+  /* color: #fff; */
   font-family: sans-serif;
   font-size: 0.8rem;
 }
@@ -383,4 +383,49 @@ h1 {
 
 .searchBar-suggestionItem.searchBar-geolocation {
   border-left: 3px solid rgba(150, 255, 150, 0.5);
+}
+
+/* Legende soll niemals scrollen*/
+.legend {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* Gleiche Typo nehmen */
+.legend * {
+  color: #fff !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+/* If the legend builder inserts an inner wrapper, ensure it doesn't constrain size */
+.legend > div {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* Symbole in der Legende Größe ändern*/
+:root {
+  --legend-symbol-width: 22px;   /* width reserved for the symbol */
+  --legend-symbol-font-size: 1.2rem; /* font-size for the symbol glyph */
+  --legend-symbol-gap: 6px;      /* gap between symbol and label */
+}
+
+/* Legend row / symbol classes (used by mapRoutes.js) */
+.legend-row {
+  display: flex;
+  align-items: center;
+  margin-top: 0px;
+}
+.legend-symbol {
+  display: inline-block;
+  width: var(--legend-symbol-width);
+  text-align: center;
+  font-size: var(--legend-symbol-font-size);
+  line-height: 1;
+  flex: 0 0 var(--legend-symbol-width);
+}
+.legend-label {
+  margin-left: var(--legend-symbol-gap);
 }
