@@ -208,12 +208,16 @@ function drawmonthFilter(container, connections) {
           selectedConn = null;
           currentMonthFilter = { startMonth: null, endMonth: null };
           if (typeof filterRoutesByMonths === 'function') filterRoutesByMonths(null, null);
+          // Notify bird filter to refresh availability after month-based filtering
+          if (typeof refreshBirdAvailability === 'function') refreshBirdAvailability();
           resetPaths();
           g.select('.month-filter-back-arrow').text('');
         } else {
           selectedConn = { source: s, target: t };
           currentMonthFilter = { startMonth: s + 1, endMonth: t + 1 };
           if (typeof filterRoutesByMonths === 'function') filterRoutesByMonths(s + 1, t + 1);
+          // Notify bird filter to refresh availability after month-based filtering
+          if (typeof refreshBirdAvailability === 'function') refreshBirdAvailability();
           applySelectionHighlight(s, t);
           g.select('.month-filter-back-arrow').text('↩');
         }
@@ -226,7 +230,7 @@ function drawmonthFilter(container, connections) {
     resetPaths();
   }
 
-  // ── Arc-Generator ────────────────────────────────────────────────────────
+  // Arc-Generator
   const arcGen = d3.arc()
     .innerRadius(arcInnerR)
     .outerRadius(arcOuterR);
@@ -236,7 +240,7 @@ function drawmonthFilter(container, connections) {
     .innerRadius(arcInnerR - 3)
     .outerRadius(arcOuterR + 4);
 
-  // ── Nodes als Kreisbogenausschnitte ──────────────────────────────────────
+  // Nodes als Kreisbogenausschnitte
 const nodeGroup = g.append('g').attr('class', 'nodes');
 
 nodeGroup.selectAll('g')
@@ -327,18 +331,22 @@ nodeGroup.selectAll('g')
       if (selectedNode === idx) {
         selectedNode = null;
         if (typeof filterRoutesByStartMonth === 'function') filterRoutesByStartMonth(null);
+        // Notify bird filter to refresh availability after month-based filtering
+        if (typeof refreshBirdAvailability === 'function') refreshBirdAvailability();
         resetPaths();
         g.select('.month-filter-back-arrow').text('');
       } else {
         selectedNode = idx;
         selectedConn = null;
         if (typeof filterRoutesByStartMonth === 'function') filterRoutesByStartMonth(idx + 1);
+        // Notify bird filter to refresh availability after month-based filtering
+        if (typeof refreshBirdAvailability === 'function') refreshBirdAvailability();
         resetPaths();
         g.select('.month-filter-back-arrow').text('↩');
       }
     });
 
-  // ── Zurück-Pfeil ─────────────────────────────────────────────────────────
+  //  Zurück-Pfeil
   const centerArrow = g.append('text')
     .attr('text-anchor', 'middle')
     .attr('dominant-baseline', 'middle')
@@ -355,12 +363,14 @@ nodeGroup.selectAll('g')
     currentMonthFilter = { startMonth: null, endMonth: null };
     if (typeof filterRoutesByMonths === 'function') filterRoutesByMonths(null, null);
     if (typeof filterRoutesByStartMonth === 'function') filterRoutesByStartMonth(null);
+    // Ensure bird filter updates when month filters are cleared via back arrow
+    if (typeof refreshBirdAvailability === 'function') refreshBirdAvailability();
     resetPaths();
     centerArrow.text('');
   });
 }
 
-// ── Tooltip-Hilfsfunktionen ───────────────────────────────────────────────
+// Tooltip-Hilfsfunktionen 
 let tooltipDiv = null;
 
 function showTooltip(svg, event, text) {
@@ -388,7 +398,7 @@ function hideTooltip() {
   if (tooltipDiv) tooltipDiv.style('opacity', '0');
 }
 
-// ── Globale Verbindungsdaten & Einstiegspunkte ───────────────────────────
+// Globale Verbindungsdaten & Einstiegspunkte
 let currentConnections = [];
 
 function updateMonthFilterConnections(connections) {

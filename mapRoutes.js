@@ -1,19 +1,33 @@
 // Ganz oben – NICHT innerhalb von buildLayers() oder onMapReady()
 function getAvailableNames() {
-  const filtered = allRoutes.filter(r => {
-    if (yearFilterFrom !== null && yearFilterTo !== null) {
-      const y = parseInt(r.year);
-      if (isNaN(y) || y < yearFilterFrom || y > yearFilterTo) return false;
-    }
-    return true;
-  });
-
-  return {
-    orders:   new Set(filtered.map(r => r.order)),
-    families: new Set(filtered.map(r => r.family)),
-    genera:   new Set(filtered.map(r => r.genus)),
-    species:  new Set(filtered.map(r => r.species)),
-  };
+  // Der Sunburst erwartet die verfügbaren Namen basierend auf den aktuell
+  // sichtbaren Routen (d.h. unter Berücksichtigung aller aktiven Filter
+  // wie months, startMonth, sowie Year-Filter). Daher nutzen wir
+  // getVisibleRoutes() anstelle einer reinen Jahresfilter-Logik.
+  try {
+    const visible = typeof getVisibleRoutes === 'function' ? getVisibleRoutes() : allRoutes;
+    return {
+      orders:   new Set(visible.map(r => r.order)),
+      families: new Set(visible.map(r => r.family)),
+      genera:   new Set(visible.map(r => r.genus)),
+      species:  new Set(visible.map(r => r.species)),
+    };
+  } catch (e) {
+    // Fallback: falls etwas unerwartet passiert, mindestens die Jahresfilter
+    const filtered = allRoutes.filter(r => {
+      if (yearFilterFrom !== null && yearFilterTo !== null) {
+        const y = parseInt(r.year);
+        if (isNaN(y) || y < yearFilterFrom || y > yearFilterTo) return false;
+      }
+      return true;
+    });
+    return {
+      orders:   new Set(filtered.map(r => r.order)),
+      families: new Set(filtered.map(r => r.family)),
+      genera:   new Set(filtered.map(r => r.genus)),
+      species:  new Set(filtered.map(r => r.species)),
+    };
+  }
 }
 
 // Farben je Red-List-Status
