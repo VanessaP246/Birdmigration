@@ -35,8 +35,8 @@ const RL_POINT_COLOR = {
 };
 
 const LINE_WIDTH_NORMAL = 1.2; // normale Linienbreite 
-const LINE_WIDTH_HOVER  = 3.5; // Breite bei Hover/Auswahl 
-const POINT_RADIUS      = 4;   // Kreis-Radius
+const LINE_WIDTH_HOVER  = 2.5; // Breite bei Hover/Auswahl 
+const POINT_RADIUS      = 3;   // Kreis-Radius
 
 // Globaler Zustand
 let allRoutes    = [];

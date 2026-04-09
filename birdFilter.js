@@ -399,25 +399,66 @@ const COLOR_GROUPS = [
   ["#ECEBF6", "#C5C2E5", "#9E99D3", "#7E7AA9"],
 ];
 
-// ── Sanitizer für SVG-Pfade (Floating-Point Fehler beheben) ────────────────
-// D3's arc() kann bei padAngle zu ungültigen Flags führen (z.B. 0.0013720000000000004 statt 0)
-function sanitizeSVGPath(pathString) {
-  if (!pathString) return pathString;
-  // SVG Arc-Flags müssen 0 oder 1 sein. Rundungsfehler zu 0 runden wenn < 0.5
-  return pathString.replace(/([A-Z])([\d.]+),([\d.]+),([\d.]+),([\d.\-]+),([\d.\-]+)/gi, (match, cmd, rx, ry, xAxisRotation, largeArc, sweep) => {
-    // Flags normalisieren: Werte < 0.5 -> 0, >= 0.5 -> 1
-    const largeArcFixed = parseFloat(largeArc) >= 0.5 ? 1 : 0;
-    const sweepFixed = parseFloat(sweep) >= 0.5 ? 1 : 0;
-    return `${cmd}${rx},${ry},${xAxisRotation},${largeArcFixed},${sweepFixed}`;
-  });
-}
-
 // ── Globale Referenz auf updateAvailability ────────────────
 // Wird von yearFilter.js aufgerufen wenn der Jahresfilter sich ändert
 let _updateBirdAvailability = null;
 
 function refreshBirdAvailability() {
   if (typeof _updateBirdAvailability === 'function') _updateBirdAvailability();
+}
+
+// ── Hierarchie dynamisch aus allRoutes aufbauen ────────────
+// Ersetzt die hardcodierte BIRD_DATA, damit der Sunburst immer
+// mit dem aktuellen Stand der CSV übereinstimmt.
+function buildBirdDataFromRoutes() {
+  if (typeof allRoutes === 'undefined' || allRoutes.length === 0) return null;
+
+  const root = { name: 'root', children: [] };
+  const orderMap = {};
+
+  for (const r of allRoutes) {
+    const order   = r.order   || '';
+    const family  = r.family  || '';
+    const genus   = r.genus   || '';
+    const species = r.species || '';
+    if (!order || !family || !genus || !species) continue;
+
+    if (!orderMap[order]) {
+      orderMap[order] = { name: order, children: [], _familyMap: {} };
+      root.children.push(orderMap[order]);
+    }
+    const orderNode = orderMap[order];
+
+    if (!orderNode._familyMap[family]) {
+      orderNode._familyMap[family] = { name: family, children: [], _genusMap: {} };
+      orderNode.children.push(orderNode._familyMap[family]);
+    }
+    const familyNode = orderNode._familyMap[family];
+
+    if (!familyNode._genusMap[genus]) {
+      familyNode._genusMap[genus] = { name: genus, children: [], _speciesMap: {} };
+      familyNode.children.push(familyNode._genusMap[genus]);
+    }
+    const genusNode = familyNode._genusMap[genus];
+
+    if (!genusNode._speciesMap[species]) {
+      genusNode._speciesMap[species] = { name: species, value: 0 };
+      genusNode.children.push(genusNode._speciesMap[species]);
+    }
+    // Anzahl Wegpunkte als Gewicht (entspricht der ursprünglichen BIRD_DATA-Logik)
+    genusNode._speciesMap[species].value += r.points.length;
+  }
+
+  // Interne Hilfs-Maps entfernen damit d3.hierarchy keine fremden Keys sieht
+  function clean(node) {
+    delete node._familyMap;
+    delete node._genusMap;
+    delete node._speciesMap;
+    if (node.children) node.children.forEach(clean);
+  }
+  clean(root);
+
+  return root;
 }
 
 // ── Hauptfunktion ──────────────────────────────────────────
@@ -441,7 +482,8 @@ function initBirdFilter() {
   const g = svg.append("g")
     .attr("transform", `translate(${radius},${radius})`);
 
-  const root = d3.hierarchy(BIRD_DATA)
+  const birdData = buildBirdDataFromRoutes() || BIRD_DATA;
+  const root = d3.hierarchy(birdData)
     .sum(d => d.value || 0)
     .sort((a, b) => b.value - a.value);
 
@@ -460,9 +502,6 @@ function initBirdFilter() {
     .outerRadius(d => x1Scale(d))
     .padAngle(0.012)
     .padRadius(radius / 2);
-  
-  // Wrappee die arc-Funktion um Pfade zu bereinigen
-  const arcSafe = d => sanitizeSVGPath(arc(d));
 
   const colorMap = {};
   root.children.forEach((d, i) => {
@@ -498,7 +537,7 @@ function initBirdFilter() {
   const paths = g.selectAll("path")
     .data(root.descendants().filter(d => d.depth > 0))
     .join("path")
-    .attr("d", arcSafe)
+    .attr("d", arc)
     .attr("fill", d => getColor(d))
     .attr("cursor", "pointer")
     .on("mouseover", function(event, d) {
@@ -620,11 +659,8 @@ function initBirdFilter() {
       .padAngle(0.012)
       .padRadius(radius / 2);
 
-    // Wrapper für visualArc um Pfade zu bereinigen
-    const visualArcSafe = d => sanitizeSVGPath(visualArc(d));
-
     // Update shapes
-    paths.transition().duration(duration).attr("d", visualArcSafe);
+    paths.transition().duration(duration).attr("d", d => visualArc(d));
 
     // Update visibility/interaction per node
     paths.each(function(d) {
@@ -775,7 +811,7 @@ function initBirdFilter() {
     centerCircle.transition().duration(400)
       .attr("fill", isRoot ? "#1a1d22" : getColor(target));
     centerText
-      .text(isRoot ? "All birds" : target.data.name)
+      .text(isRoot ? "Alle Vögel" : target.data.name)
       .attr("font-size", isRoot ? "0.75rem" : "0.7rem")
       .attr("y", isRoot ? 0 : -(innerR * 0.2));
     centerArrow.text(isRoot ? "" : "↩");
