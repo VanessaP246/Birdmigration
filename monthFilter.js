@@ -12,6 +12,12 @@ const MONTH_COLORS = [
   '#F4A261', '#E76F51', '#398CBF', '#8A4CA9', '#A67458', '#CE6A85'
 ];
 
+// Deutsche Monatsnamen (0-basiert: index 0 = Januar)
+const MONTH_NAMES = [
+  'January','February','March','April','May','June',
+  'July','August','September','October','November','December'
+];
+
 let currentMonthFilter = { startMonth: null, endMonth: null };
 let selectedConn = null;
 let selectedNode = null;
@@ -194,8 +200,11 @@ function drawmonthFilter(container, connections) {
             .attr('stroke-width', baseStrokeWidth(v) + 1.5)
             .attr('opacity', Math.min(baseOpacity(v) + 0.4, 1));
         }
+        // Show month names instead of numeric month values
+        const sName = MONTH_NAMES[s] || (s + 1);
+        const tName = MONTH_NAMES[t] || (t + 1);
         showTooltip(svg, event,
-          `${s + 1} → ${t + 1}: ${v} routes${selectedConn ? '' : ' (Click to filter)'}`);
+          `${sName} → ${tName}: ${v} data points`);
       })
       .on('mouseleave', function() {
         hideTooltip();
@@ -387,10 +396,45 @@ function showTooltip(svg, event, text) {
       .style('white-space', 'nowrap')
       .style('border', '1px solid rgba(255,255,255,0.3)');
   }
+  // Set text first and temporarily hide (opacity 0) so we can measure size
   tooltipDiv
-    .style('left', (event.pageX + 10) + 'px')
-    .style('top',  (event.pageY - 10) + 'px')
     .text(text)
+    .style('opacity', '0')
+    .style('left', '0px')
+    .style('top', '0px');
+
+  const tooltipEl = tooltipDiv.node();
+  const ttRect = tooltipEl.getBoundingClientRect();
+  const ttWidth = ttRect.width || tooltipEl.offsetWidth || 0;
+  const ttHeight = ttRect.height || tooltipEl.offsetHeight || 0;
+
+  // Use page coordinates (account for scroll) where available
+  const pageX = (typeof event.pageX === 'number') ? event.pageX : (event.clientX + window.scrollX);
+  const pageY = (typeof event.pageY === 'number') ? event.pageY : (event.clientY + window.scrollY);
+
+  const padding = 10;
+  let left = pageX + padding;
+  let top  = pageY - 10;
+
+  // If tooltip would overflow the right viewport edge, flip to the left of the cursor
+  const viewportRight = window.scrollX + window.innerWidth;
+  if (left + ttWidth > viewportRight - 8) {
+    left = pageX - padding - ttWidth;
+  }
+  // Clamp horizontally to viewport
+  if (left < window.scrollX + 8) left = window.scrollX + 8;
+
+  // If tooltip would overflow bottom, clamp up
+  const viewportBottom = window.scrollY + window.innerHeight;
+  if (top + ttHeight > viewportBottom - 8) {
+    top = viewportBottom - ttHeight - 8;
+  }
+  // Clamp top
+  if (top < window.scrollY + 8) top = window.scrollY + 8;
+
+  tooltipDiv
+    .style('left', left + 'px')
+    .style('top',  top  + 'px')
     .style('opacity', '1');
 }
 

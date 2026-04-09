@@ -272,7 +272,7 @@ function displaySuggestions(results, container, input) {
           <div class="searchBar-suggestionIcon">🐦</div>
           <div class="searchBar-suggestionText">
             <div class="searchBar-suggestionTitle">${escapeHtml(bird.species)}</div>
-            <div class="searchBar-suggestionMeta">${bird.count} routes</div>
+            <div class="searchBar-suggestionMeta">${bird.count} data points</div>
           </div>
         </div>
       `;

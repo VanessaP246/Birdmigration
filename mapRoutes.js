@@ -150,8 +150,11 @@ function buildLayers() {
   const lineFeatures = visible.map(r => ({
     type: 'Feature',
     properties: {
-      code: r.code, displayCode: r.displayCode, species: r.species, rl: r.rl,
+      code: r.code, displayCode: r.displayCode, species: r.species, rl: r.rl, order: r.order,
       country: r.country, year: r.year,
+      startMonth: r.month, endMonth: r.endMonth,
+      // Precompute great-circle distance between origin and destination (km)
+      distanceKm: (r.points && r.points.length >= 2) ? Math.round((calcDistanceKm(r.points[0], r.points[r.points.length - 1]) || 0) * 10) / 10 : null,
       color: RL_LINE_COLOR[r.rl] || RL_LINE_COLOR[''],
     },
     geometry: { type: 'LineString', coordinates: r.points.map(p => [p.lon, p.lat]) }
@@ -449,15 +452,60 @@ function calculateBearing(from, to) {
   
   return bearing;
 }
+// Haversine distance between two points {lat, lon} in kilometers
+function calcDistanceKm(from, to) {
+  if (!from || !to) return 0;
+  const R = 6371; // Earth radius in km
+  const lat1 = from.lat * Math.PI / 180;
+  const lat2 = to.lat * Math.PI / 180;
+  const dLat = lat2 - lat1;
+  const dLon = (to.lon - from.lon) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
 // Tooltip HTML
 function buildTooltipHTML(props) {
-  const rlColor = RL_LINE_COLOR[props.rl] || '#fff';
+  const rlColor = RL_LINE_COLOR[props.rl] || '#888888';
+  // Show a small colored rectangle (like the legend) followed by the RL label in white
+  const rlLabel = props.rl ? props.rl : 'Unbekannt';
+  // Determine species text color: prefer the sunburst's light color for the
+  // species' order if available, otherwise fall back to white.
+  let speciesColor = '#fff';
+  try {
+    if (typeof getBirdLightColor === 'function') {
+      const c = getBirdLightColor(props.order || props.species || '');
+      if (c) speciesColor = c;
+    }
+  } catch (e) {}
+  // Format duration: "Month, Year - Month, Year" if month info is available
+  const MONTH_NAMES = [
+    'January','February','March','April','May','June','July','August','September','October','November','December'
+  ];
+  let durationLine = '';
+  try {
+    const sm = props.startMonth ? parseInt(props.startMonth) : NaN;
+    const em = props.endMonth   ? parseInt(props.endMonth)   : NaN;
+    const y  = props.year ? props.year : '';
+    if (!isNaN(sm) && !isNaN(em)) {
+      const sName = MONTH_NAMES[Math.max(0, Math.min(11, sm - 1))] || sm;
+      const eName = MONTH_NAMES[Math.max(0, Math.min(11, em - 1))] || em;
+      durationLine = `${sName}${y ? ', ' + y : ''} - ${eName}${y ? ', ' + y : ''}`;
+    }
+  } catch (e) { durationLine = ''; }
+
   return `
-    <strong style="font-size:0.85rem">${props.species}</strong><br>
-    <span style="color:${rlColor}">${props.rl || 'Unbekannt'}</span><br>
-    Route ${props.displayCode || props.code}<br>
-    ${props.country ? props.country + '<br>' : ''}
-    ${props.year    ? 'Jahr: ' + props.year  : ''}
+    <strong style="font-size:0.85rem;color:${speciesColor}">${props.species}</strong><br>
+    <div style="display:flex;align-items:center;margin-top:4px;">
+      <span style="display:inline-block;width:10px;height:10px;background:${rlColor};border-radius:2px;margin-right:6px;flex:0 0 auto"></span>
+      <span style="color:#fff;font-size:0.85rem">${rlLabel}</span>
+    </div>
+    <div style="margin-top:6px;display:flex;flex-direction:column;gap:6px;">
+      ${durationLine ? '<div style="opacity:0.95">' + durationLine + '</div>' : ''}
+      ${props.distanceKm ? '<div>Distance: ' + props.distanceKm + ' km</div>' : ''}
+      <div>Route ${props.displayCode || props.code}</div>
+      ${props.country ? '<div>' + props.country + '</div>' : ''}
+    </div>
   `;
 }
 
