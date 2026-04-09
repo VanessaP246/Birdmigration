@@ -91,6 +91,10 @@
                   attributionList.appendChild(datasetAttribution);
                 }
               }
+              // folgende 3 Zeilen sind ein Test für die Attribution, falls nicht releavnt rauskicken
+              const attribContainer = document.querySelector('.maplibregl-ctrl-attrib');
+              const attribBtn = document.querySelector('.maplibregl-ctrl-attrib-button');
+              if (attribContainer && attribBtn) attribContainer.appendChild(attribBtn);
             }, 500);
           });
         </script>

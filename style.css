@@ -147,29 +147,41 @@ h1 {
 }
 
 /* Attribution-Button */
-/* i-Button bleibt unten rechts fixiert */
-/* .maplibregl-ctrl-attrib-button {
-  position: fixed;
-} */
-
-/* Figshare-Link immer schwarz */
-.maplibregl-ctrl-attrib-inner a[href*="figshare"],
-.maplibregl-ctrl-attrib-inner a[href*="figshare"]:visited,
-.maplibregl-ctrl-attrib-inner a[href*="figshare"]:hover,
-.maplibregl-ctrl-attrib-inner a[href*="figshare"]:active {
-  color: #000 !important;
-}
-
-.maplibregl-ctrl-attrib-inner {
-  margin-right: 20px; /* Platz für den Button freilassen */
-  font-family: sans-serif;
-  font-weight: 0.8rem;
+/* Attribution: Text links, Button rechts auf Höhe der untersten Zeile */
+.maplibregl-ctrl-attrib {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-end !important;
+  position: static !important;
 }
 
 .maplibregl-ctrl-attrib-button {
-  position: absolute;
-  bottom: 0;
-  right: 0;
+  position: static !important;
+  bottom: auto !important;
+  right: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  flex-shrink: 0;
+  order: 2;
+}
+
+.maplibregl-ctrl.maplibregl-ctrl-attrib {
+  padding: 0 2px 2px 8px !important;
+}
+
+.maplibregl-ctrl-attrib-inner {
+  order: 1;
+  margin-right: 0 !important;
+  text-align: right;
+  font-family: sans-serif;
+  font-size: 0.8rem;
+}
+
+/* Figshare-Link */
+.maplibregl-ctrl-attrib-inner a[href*="figshare"],
+.maplibregl-ctrl-attrib-inner a[href*="figshare"]:visited,
+.maplibregl-ctrl-attrib-inner a[href*="figshare"]:hover {
+  color: #000 !important;
 }
 
 /* Rechte Spalte (drei Filter-Blöcke) */
