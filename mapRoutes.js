@@ -389,7 +389,7 @@ function updateHighlightSymbols() {
         rotation = calculateBearing(pt, route.points[i + 1]); // Dreieck wird so rotiert, dass es zum nächsten Punkt zeigt
       }
     } else if (pt.node === 'Destination') {
-      symbol = '×'; // Kreuz
+      symbol = '\u2715'; // Kreuz
       if (i > 0) {
         rotation = calculateBearing(route.points[i - 1], pt); // Kreuz wird so rotiert, dass es zum nächsten Punkt zeigt
       }
