@@ -508,6 +508,33 @@ function initBirdFilter() {
     colorMap[d.data.name] = COLOR_GROUPS[i % COLOR_GROUPS.length];
   });
 
+  // Expose a lightweight global helper so other modules (mapRoutes.js)
+  // can query the lightest sunburst color for a given order.
+  // We store the mapping on window to avoid leaking variables across modules.
+  try {
+    window._birdColorMap = colorMap;
+    window.getBirdLightColor = function(orderName) {
+      if (!orderName) return null;
+      if (window._birdColorMap && window._birdColorMap[orderName]) {
+        return window._birdColorMap[orderName][0]; // lightest color
+      }
+      // Fallback deterministic hash to pick a COLOR_GROUP index
+      try {
+        let h = 0;
+        for (let i = 0; i < orderName.length; i++) {
+          h = ((h << 5) - h) + orderName.charCodeAt(i);
+          h |= 0;
+        }
+        const idx = Math.abs(h) % COLOR_GROUPS.length;
+        return COLOR_GROUPS[idx][0];
+      } catch (e) {
+        return COLOR_GROUPS[0][0];
+      }
+    };
+  } catch (e) {
+    // ignore if window is not writable in this environment
+  }
+
   function getColor(d) {
     let node = d;
     while (node.depth > 1) node = node.parent;
