@@ -110,6 +110,11 @@ function onMapReady() {
       if (cs.position === 'static') mc.style.position = 'relative';
       if (hoverTooltip && !mc.contains(hoverTooltip)) mc.appendChild(hoverTooltip);
       if (fixedTooltip && !mc.contains(fixedTooltip)) mc.appendChild(fixedTooltip);
+     //Legende und Überschrift in Full screen machen
+      const legendEl = document.querySelector('.legend');
+      if (legendEl && !mc.contains(legendEl)) mc.appendChild(legendEl);
+      const headingEl = document.querySelector('.heading');
+      if (headingEl && !mc.contains(headingEl)) mc.appendChild(headingEl);
     }
   } catch (e) {
   }
