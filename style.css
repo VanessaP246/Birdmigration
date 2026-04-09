@@ -146,6 +146,32 @@ h1 {
   height: 130px;
 }
 
+/* Attribution-Button */
+/* i-Button bleibt unten rechts fixiert */
+/* .maplibregl-ctrl-attrib-button {
+  position: fixed;
+} */
+
+/* Figshare-Link immer schwarz */
+.maplibregl-ctrl-attrib-inner a[href*="figshare"],
+.maplibregl-ctrl-attrib-inner a[href*="figshare"]:visited,
+.maplibregl-ctrl-attrib-inner a[href*="figshare"]:hover,
+.maplibregl-ctrl-attrib-inner a[href*="figshare"]:active {
+  color: #000 !important;
+}
+
+.maplibregl-ctrl-attrib-inner {
+  margin-right: 20px; /* Platz für den Button freilassen */
+  font-family: sans-serif;
+  font-weight: 0.8rem;
+}
+
+.maplibregl-ctrl-attrib-button {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+
 /* Rechte Spalte (drei Filter-Blöcke) */
 .right-col {
   display: flex;
