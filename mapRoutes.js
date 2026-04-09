@@ -643,9 +643,9 @@ function buildLegend() {
     ).join('')}
     <div style="font-weight:bold;margin-top:8px;margin-bottom:4px">Nodes</div>
     <div style="margin-bottom:6px"><label><input type="checkbox" id="hide-stops-checkbox" ${hideStops ? 'checked' : ''}/> Hide transit locations</label></div>
-    <div>▲ Origin</div>
-    <div>● Transit location</div>
-    <div>✕ Destination</div>
+  <div class="legend-row"><span class="legend-symbol">▲</span><span class="legend-label">Origin</span></div>
+  <div class="legend-row"><span class="legend-symbol">●</span><span class="legend-label">Transit location</span></div>
+  <div class="legend-row"><span class="legend-symbol">✕</span><span class="legend-label">Destination</span></div>
   `;
   legend.appendChild(div);
 

@@ -404,3 +404,28 @@ h1 {
   max-height: none !important;
   overflow: visible !important;
 }
+
+/* Symbole in der Legende Größe ändern*/
+:root {
+  --legend-symbol-width: 22px;   /* width reserved for the symbol */
+  --legend-symbol-font-size: 1.2rem; /* font-size for the symbol glyph */
+  --legend-symbol-gap: 6px;      /* gap between symbol and label */
+}
+
+/* Legend row / symbol classes (used by mapRoutes.js) */
+.legend-row {
+  display: flex;
+  align-items: center;
+  margin-top: 0px;
+}
+.legend-symbol {
+  display: inline-block;
+  width: var(--legend-symbol-width);
+  text-align: center;
+  font-size: var(--legend-symbol-font-size);
+  line-height: 1;
+  flex: 0 0 var(--legend-symbol-width);
+}
+.legend-label {
+  margin-left: var(--legend-symbol-gap);
+}
