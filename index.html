@@ -71,30 +71,24 @@
             setTimeout(() => {
               // Finde den Attribution-Button
               const attributionButton = document.querySelector('.maplibregl-ctrl-attrib-button');
-              if (attributionButton && attributionButton.parentElement) {
-                // Finde oder erstelle die Attribution-Liste
-                let attributionList = document.querySelector('.maplibregl-ctrl-attrib-inner');
-                if (!attributionList) {
+              if (attributionButton && attributionButton.parentElement) { // Überprüfe, ob der Attribution-Button ein übergeordnetes Element hat
+                let attributionList = document.querySelector('.maplibregl-ctrl-attrib-inner'); // Finde oder erstelle die Attribution-Liste
+                if (!attributionList) { // Wenn die Attribution-Liste nicht existiert, erstelle sie
                   attributionList = attributionButton.parentElement.querySelector('.maplibregl-ctrl-attrib-inner');
                 }
                 
                 if (attributionList) {
-                  // Erstelle ein neues Element für Bird Migration Dataset
-                  const datasetAttribution = document.createElement('a');
+                  const datasetAttribution = document.createElement('a'); // Erstelle ein neues Element für Bird Migration Dataset
                   datasetAttribution.href = 'https://figshare.com/articles/dataset/A_global_dataset_of_directional_migration_networks_of_migratory_birds/26162269?file=48041545';
-                  datasetAttribution.target = '_blank';
-                  datasetAttribution.rel = 'noopener';
+                  datasetAttribution.target = '_blank'; // Öffnet den Link in einem neuen Tab
+                  datasetAttribution.rel = 'noopener'; // Sicherheitsempfehlung für Links, die in einem neuen Tab geöffnet werden
                   datasetAttribution.innerHTML = 'Bird Migration data set';
-                  datasetAttribution.style.cssText = 'display: block; margin-top: 4px; text-align: right; font-size: 0.85rem; color: #64c8ff;';
+                  // datasetAttribution.style.cssText = 'display: block; margin-top: 4px; text-align: right; font-size: 0.85rem; color: red;'; 
                   
-                  attributionList.appendChild(document.createElement('br'));
+                  attributionList.appendChild(document.createElement('br')); // Absatz nach Map-Attribution 
                   attributionList.appendChild(datasetAttribution);
                 }
               }
-              // folgende 3 Zeilen sind ein Test für die Attribution, falls nicht releavnt rauskicken
-              const attribContainer = document.querySelector('.maplibregl-ctrl-attrib');
-              const attribBtn = document.querySelector('.maplibregl-ctrl-attrib-button');
-              if (attribContainer && attribBtn) attribContainer.appendChild(attribBtn);
             }, 500);
           });
         </script>

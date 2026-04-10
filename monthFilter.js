@@ -1,18 +1,12 @@
 // Non-Ribbon Chord Diagram for Bird Migration Months
 
-// Farben sortiert
-// const MONTH_COLORS = [
-//   '#3A5D53', '#A1C181', '#858C4A', '#E9C46A', '#F4A261', '#E76F51',
-//   '#CE6A85', '#A95B4C', '#A67458', '#9E99D3', '#398CBF', '#4C54A9'
-// ];
-
 // Farben wie bei birdFilter
 const MONTH_COLORS = [
   '#3A5D53', '#E9C46A', '#A95B4C', '#4C54A9', '#7AB8BF', '#A1C181',
   '#F4A261', '#E76F51', '#398CBF', '#8A4CA9', '#A67458', '#CE6A85'
 ];
 
-// Deutsche Monatsnamen (0-basiert: index 0 = Januar)
+// Monatsnamen (0 = Januar)
 const MONTH_NAMES = [
   'January','February','March','April','May','June',
   'July','August','September','October','November','December'
@@ -200,7 +194,7 @@ function drawmonthFilter(container, connections) {
             .attr('stroke-width', baseStrokeWidth(v) + 1.5)
             .attr('opacity', Math.min(baseOpacity(v) + 0.4, 1));
         }
-        // Show month names instead of numeric month values
+        // Monatnamen im ToolTip
         const sName = MONTH_NAMES[s] || (s + 1);
         const tName = MONTH_NAMES[t] || (t + 1);
         showTooltip(svg, event,
@@ -245,9 +239,9 @@ function drawmonthFilter(container, connections) {
     .outerRadius(arcOuterR);
 
   // Hover-Bogen: leicht nach außen vergrößert
-  const arcHoverGen = d3.arc()
-    .innerRadius(arcInnerR - 3)
-    .outerRadius(arcOuterR + 4);
+  // const arcHoverGen = d3.arc()
+  //   .innerRadius(arcInnerR - 3)
+  //   .outerRadius(arcOuterR + 4);
 
   // Nodes als Kreisbogenausschnitte
 const nodeGroup = g.append('g').attr('class', 'nodes');

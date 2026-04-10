@@ -147,8 +147,7 @@ h1 {
 }
 
 /* Attribution-Button */
-/* Attribution: Text links, Button rechts auf Höhe der untersten Zeile */
-.maplibregl-ctrl-attrib {
+.maplibregl-ctrl-attrib { 
   display: flex !important;
   flex-direction: row !important;
   align-items: flex-end !important;
@@ -166,11 +165,12 @@ h1 {
 }
 
 .maplibregl-ctrl.maplibregl-ctrl-attrib {
-  padding: 0 2px 2px 8px !important;
+  padding: 2px 4px 4px 10px !important;
 }
 
 .maplibregl-ctrl-attrib-inner {
   order: 1;
+  padding-right: 10px;
   margin-right: 0 !important;
   text-align: right;
   font-family: sans-serif;
