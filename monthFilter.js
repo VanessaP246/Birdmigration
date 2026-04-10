@@ -137,7 +137,7 @@ function drawmonthFilter(container, connections) {
     });
   }
 
-   // ── Verbindungslinien ────────────────────────────────────────────────────
+   // Verbindugslinien
   const connectionGroup = g.append('g').attr('class', 'connections');
  
   for (const conn of connections) {
@@ -204,14 +204,13 @@ function drawmonthFilter(container, connections) {
         hideTooltip();
         resetPaths();
       })
-      .on('click', function() {
+      .on('click', function() { 
         const s = +d3.select(this).attr('data-source');
         const t = +d3.select(this).attr('data-target');
         if (selectedConn && selectedConn.source === s && selectedConn.target === t) {
           selectedConn = null;
           currentMonthFilter = { startMonth: null, endMonth: null };
           if (typeof filterRoutesByMonths === 'function') filterRoutesByMonths(null, null);
-          // Notify bird filter to refresh availability after month-based filtering
           if (typeof refreshBirdAvailability === 'function') refreshBirdAvailability();
           resetPaths();
           g.select('.month-filter-back-arrow').text('');
@@ -219,7 +218,6 @@ function drawmonthFilter(container, connections) {
           selectedConn = { source: s, target: t };
           currentMonthFilter = { startMonth: s + 1, endMonth: t + 1 };
           if (typeof filterRoutesByMonths === 'function') filterRoutesByMonths(s + 1, t + 1);
-          // Notify bird filter to refresh availability after month-based filtering
           if (typeof refreshBirdAvailability === 'function') refreshBirdAvailability();
           applySelectionHighlight(s, t);
           g.select('.month-filter-back-arrow').text('↩');
@@ -268,7 +266,7 @@ nodeGroup.selectAll('g')
 
     d3.select(this).append('path')
       .attr('class', 'node-ring')
-      .attr('d', arcHoverGen({ startAngle, endAngle }))
+      // .attr('d', arcHoverGen({ startAngle, endAngle }))
       .attr('fill', MONTH_COLORS[d])
       .attr('opacity', 0)
       .style('pointer-events', 'none');
@@ -334,7 +332,6 @@ nodeGroup.selectAll('g')
       if (selectedNode === idx) {
         selectedNode = null;
         if (typeof filterRoutesByStartMonth === 'function') filterRoutesByStartMonth(null);
-        // Notify bird filter to refresh availability after month-based filtering
         if (typeof refreshBirdAvailability === 'function') refreshBirdAvailability();
         resetPaths();
         g.select('.month-filter-back-arrow').text('');
@@ -342,7 +339,6 @@ nodeGroup.selectAll('g')
         selectedNode = idx;
         selectedConn = null;
         if (typeof filterRoutesByStartMonth === 'function') filterRoutesByStartMonth(idx + 1);
-        // Notify bird filter to refresh availability after month-based filtering
         if (typeof refreshBirdAvailability === 'function') refreshBirdAvailability();
         resetPaths();
         g.select('.month-filter-back-arrow').text('↩');
@@ -366,7 +362,6 @@ nodeGroup.selectAll('g')
     currentMonthFilter = { startMonth: null, endMonth: null };
     if (typeof filterRoutesByMonths === 'function') filterRoutesByMonths(null, null);
     if (typeof filterRoutesByStartMonth === 'function') filterRoutesByStartMonth(null);
-    // Ensure bird filter updates when month filters are cleared via back arrow
     if (typeof refreshBirdAvailability === 'function') refreshBirdAvailability();
     resetPaths();
     centerArrow.text('');
@@ -390,7 +385,8 @@ function showTooltip(svg, event, text) {
       .style('white-space', 'nowrap')
       .style('border', '1px solid rgba(255,255,255,0.3)');
   }
-  // Set text first and temporarily hide (opacity 0) so we can measure size
+  
+  // Text setzen und Tooltip unsichtbar positionieren, um Größe zu messen
   tooltipDiv
     .text(text)
     .style('opacity', '0')
@@ -402,7 +398,7 @@ function showTooltip(svg, event, text) {
   const ttWidth = ttRect.width || tooltipEl.offsetWidth || 0;
   const ttHeight = ttRect.height || tooltipEl.offsetHeight || 0;
 
-  // Use page coordinates (account for scroll) where available
+  // event.pageX/Y sind nicht in allen Browsern verfügbar (z.B. Safari auf iOS), daher Fallback auf clientX/Y + scroll
   const pageX = (typeof event.pageX === 'number') ? event.pageX : (event.clientX + window.scrollX);
   const pageY = (typeof event.pageY === 'number') ? event.pageY : (event.clientY + window.scrollY);
 
@@ -410,20 +406,18 @@ function showTooltip(svg, event, text) {
   let left = pageX + padding;
   let top  = pageY - 10;
 
-  // If tooltip would overflow the right viewport edge, flip to the left of the cursor
+  // Wenn Tooltip über den rechten Rand hinausgehen würde, links positionieren
   const viewportRight = window.scrollX + window.innerWidth;
   if (left + ttWidth > viewportRight - 8) {
     left = pageX - padding - ttWidth;
   }
-  // Clamp horizontally to viewport
   if (left < window.scrollX + 8) left = window.scrollX + 8;
 
-  // If tooltip would overflow bottom, clamp up
+  // Wenn Tooltip über den unteren Rand hinausgehen würde, nach oben positionieren
   const viewportBottom = window.scrollY + window.innerHeight;
   if (top + ttHeight > viewportBottom - 8) {
     top = viewportBottom - ttHeight - 8;
   }
-  // Clamp top
   if (top < window.scrollY + 8) top = window.scrollY + 8;
 
   tooltipDiv

@@ -1,5 +1,4 @@
 // Search Bar mit Vogelnamen und Orts-Suche
-// Sucht nach Vogelnamen oder geographischen Orten/Ländern
 
 let searchBarData = {
   birds: [], // Array von { species, count }
@@ -71,7 +70,7 @@ function initSearchBar() {
   const suggestionsDiv = document.getElementById('searchBar-suggestions');
   const clearBtn = document.getElementById('searchBar-clearBtn');
 
-  // Event: Input mit Debounce
+  // Eingabe-Event mit Debounce -> Debounce bedeutet, dass die Suche zeitverzögert ausgeführt wird sobald der User kurz pausiert
   let searchTimeout;
   input.addEventListener('input', async (e) => {
     clearTimeout(searchTimeout);
@@ -103,7 +102,7 @@ function initSearchBar() {
     if (typeof applySelectionStyle === 'function') applySelectionStyle();
   });
 
-  // Bei Click außerhalb: Suggestions schließen
+  // Bei Click außerhalb: Vorschläge schließen
   document.addEventListener('click', (e) => {
     if (!container.contains(e.target)) {
       suggestionsDiv.innerHTML = '';
@@ -176,7 +175,7 @@ async function searchOpenStreetMap(query) {
       lat: parseFloat(item.lat),
       boundingbox: item.boundingbox, // [minlat, maxlat, minlon, maxlon]
       displayName: item.display_name,
-      geojson: item.geojson || null  // Polygon/MultiPolygon für Grenzen
+      geojson: item.geojson || null  // Polygon für Grenzen
     })).filter(item => !isNaN(item.lon) && !isNaN(item.lat));
   } catch (e) {
     console.error('OSM API error:', e);
@@ -324,7 +323,7 @@ function displaySuggestions(results, container, input) {
   } else {
     container.innerHTML = html;
 
-    // Event-Listener auf alle Suggestions
+    // Event-Listener auf alle Vorschläge
     document.querySelectorAll('.searchBar-suggestionItem').forEach(item => {
       item.addEventListener('click', (e) => {
         onSuggestionSelected(item, input, container);

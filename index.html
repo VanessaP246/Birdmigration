@@ -44,10 +44,10 @@
             container: 'map',
             style: styles.custom,
             center: [13.3777, 52.5162], // Koordinaten von Berlin
-            zoom: 0
+            zoom: 0 // Start-Zoomstufe
           });
 
-          // Kartensteuerung als Buttons (Positionen: 'top-right', 'top-left', 'bottom-right', 'bottom-left')
+          // Kartensteuerung als Buttons
           map.addControl(new maplibregl.NavigationControl({
           showCompass: false // Kompass zum gerade Aurichten nicht anzeigen
           }));
@@ -95,9 +95,6 @@
 
         <div class="title"></div>
         <div class="legend">
-          <!-- Radio-Buttons zum Umschalten zwischen den Karten -->
-          <!-- <fieldset> -->
-            <!-- <legend>Select a map style:</legend> -->
              <p style="font-weight:bold;margin-bottom:4px">Map Style</p>
             <div>
               <input type="radio" class="mapStyle" name="map style" value="custom" checked onclick="setStyle('custom')" />                
@@ -107,7 +104,6 @@
               <input type="radio" class="mapStyle" name="map style" value="satellite" onclick="setStyle('satellite')" />
               <label for="satellite">satellite map</label>
             </div>
-          <!-- </fieldset> -->
         </div>
       </div>
       
@@ -126,7 +122,6 @@
   <script src="libs/p5.min.js"></script>
   <script src="libs/p5.dom.min.js"></script>
   <script src="libs/p5.sound.min.js"></script>
-  <!-- <script src="MigrationRoute.js"></script> -->
   <script src="sketch.js"></script>
   <script src="mapRoutes.js"></script>
   <script src="birdFilter.js"></script>
