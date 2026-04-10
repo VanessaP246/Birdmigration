@@ -412,15 +412,15 @@ h1 {
 
 /* Verschiedene Vorschlagstypen */
 .searchBar-suggestionItem.searchBar-bird {
-  border-left: 3px solid rgba(255, 200, 100, 0.5);
+  border-left: 3px solid #A67458;
 }
 
 .searchBar-suggestionItem.searchBar-location {
-  border-left: 3px solid rgba(100, 200, 255, 0.5);
+  border-left: 3px solid #a170ba;
 }
 
 .searchBar-suggestionItem.searchBar-geolocation {
-  border-left: 3px solid rgba(150, 255, 150, 0.5);
+  border-left: 3px solid #a170ba;
 }
 
 /* Legende soll niemals scrollen*/
