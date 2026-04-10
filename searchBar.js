@@ -8,7 +8,7 @@ let searchBarData = {
 
 let allRoutesForSearch = []; // Speichert alle Routen für die Suche
 let searchMarker = null; // Globaler Marker für den gesuchten Ort
-const SEARCH_MARKER_COLOR = '#8A4CA9'; // Farbe für Such-Marker
+const SEARCH_MARKER_COLOR = '#a170ba'; // Farbe für Such-Marker
 
 // Wird aufgerufen wenn CSV geladen ist (von sketch.js über onCSVParsed)
 function onSearchBarDataReady(csvTable) {

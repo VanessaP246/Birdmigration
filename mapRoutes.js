@@ -96,6 +96,78 @@ Object.assign(fixedTooltip.style, {
   border: '1px solid rgba(255,255,255,0.3)',
 });
 
+// Empty-overlay (shown when no routes are visible)
+let emptyOverlay = null;
+let emptyOverlayTimer = null;
+let emptyOverlayDismissed = false; // user-closed state
+const EMPTY_OVERLAY_DELAY_MS = 400; // avoid flashing when year slider is moved quickly
+
+function createEmptyOverlay() {
+  if (emptyOverlay) return emptyOverlay;
+  const el = document.createElement('div');
+  el.className = 'empty-overlay';
+  el.style.opacity = '0';
+  el.style.transition = 'opacity 0.12s ease';
+  // close button (top-right) and message
+  el.innerHTML = `
+    <button class="close-btn" aria-label="Close">✕</button>
+    <div class="empty-message">No routes available with the current filter settings.<br><small>Adjust filters to display routes.</small></div>
+  `;
+
+  const btn = el.querySelector('.close-btn');
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    emptyOverlayDismissed = true;
+    hideEmptyOverlay();
+  });
+
+  emptyOverlay = el;
+  return emptyOverlay;
+}
+
+function showEmptyOverlay() {
+  if (!emptyOverlay) createEmptyOverlay();
+  if (typeof map === 'undefined' || !map) return;
+  try {
+    const mc = map.getContainer();
+    if (mc && !mc.contains(emptyOverlay)) mc.appendChild(emptyOverlay);
+    // ensure same visual stacking as legend (a little above)
+    emptyOverlay.style.zIndex = 1003;
+    // make visible
+    requestAnimationFrame(() => { emptyOverlay.style.opacity = '1'; });
+  } catch (e) {}
+}
+
+function hideEmptyOverlay() {
+  if (emptyOverlayTimer) { clearTimeout(emptyOverlayTimer); emptyOverlayTimer = null; }
+  if (!emptyOverlay) return;
+  try {
+    emptyOverlay.style.opacity = '0';
+    // remove from DOM after transition
+    setTimeout(() => {
+      if (emptyOverlay && emptyOverlay.parentNode) emptyOverlay.parentNode.removeChild(emptyOverlay);
+    }, 160);
+  } catch (e) {}
+}
+
+function updateEmptyOverlay(isEmpty) {
+  // If nothing is visible and user hasn't dismissed, schedule showing after a short delay
+  if (isEmpty) {
+    if (emptyOverlayDismissed) return; // user intentionally closed
+    if (emptyOverlayTimer) return; // already scheduled
+    emptyOverlayTimer = setTimeout(() => {
+      emptyOverlayTimer = null;
+      if (!emptyOverlayDismissed) showEmptyOverlay();
+    }, EMPTY_OVERLAY_DELAY_MS);
+  } else {
+    // routes exist: cancel any pending show and hide immediately
+    if (emptyOverlayTimer) { clearTimeout(emptyOverlayTimer); emptyOverlayTimer = null; }
+    hideEmptyOverlay();
+    // reset dismissed flag when we return to non-empty state so overlay may reappear after new filter changes
+    emptyOverlayDismissed = false;
+  }
+}
+
 // Einstiegspunkt
 function initMapRoutes(csvTable) {
   allRoutes = parseRoutes(csvTable);
@@ -232,6 +304,11 @@ function buildLayers() {
 
   // Auswahl-Stil wiederherstellen wenn Layer neu gebaut wurden
   applySelectionStyle();
+
+  // Show/hide the empty overlay depending on whether there are any visible routes.
+  try {
+    updateEmptyOverlay(!visible || visible.length === 0);
+  } catch (e) {}
 }
 
 // Interaktion registrieren (nur einmal!)
@@ -618,6 +695,8 @@ function getVisibleMonthConnections() {
   selectedRouteData    = null;
   selectedRoute_lngLat = null;
   fixedTooltip.style.opacity = '0';
+  // Allow overlay to reappear after a deliberate filter change
+  emptyOverlayDismissed = false;
   buildLayers();
 }
 
@@ -638,6 +717,9 @@ function filterRoutesByMonths(startMonth, endMonth) {
   selectedRouteData    = null;
   selectedRoute_lngLat = null;
   fixedTooltip.style.opacity = '0';
+
+  // Allow overlay to reappear after a deliberate filter change
+  emptyOverlayDismissed = false;
 
   buildLayers();
 }
@@ -660,6 +742,9 @@ function filterRoutesByStartMonth(month) {
   selectedRoute_lngLat = null;
   fixedTooltip.style.opacity = '0';
 
+  // Allow overlay to reappear after a deliberate filter change
+  emptyOverlayDismissed = false;
+
   buildLayers();
 }
 
@@ -680,6 +765,8 @@ function clearAllFilters() {
   selectedRouteData = null;
   selectedRoute_lngLat = null;
   fixedTooltip.style.opacity = '0';
+  // Clearing filters should allow the overlay to reappear if still empty
+  emptyOverlayDismissed = false;
   buildLayers();
 }
 
@@ -741,6 +828,8 @@ function filterRoutesByYear(from, to) {
   selectedRouteData    = null;
   selectedRoute_lngLat = null;
   fixedTooltip.style.opacity = '0';
+  // Reset overlay dismissal when the year filter is explicitly set
+  emptyOverlayDismissed = false;
   buildLayers();
 }
 
