@@ -262,6 +262,7 @@ nodeGroup.selectAll('g')
       .attr('class', 'node-arc')
       .attr('d', arcGen({ startAngle, endAngle }))
       .attr('fill', MONTH_COLORS[d])
+      .attr('opacity', 1)
       .style('cursor', 'pointer');
 
     d3.select(this).append('path')
@@ -287,6 +288,9 @@ nodeGroup.selectAll('g')
   // Node-Interaktion
   nodeGroup.selectAll('g.node')
     .on('mouseenter', function(event, idx) {
+      d3.select(this).select('.node-arc')
+        .transition().duration(200)
+        .attr('opacity', 0.75);
       d3.select(this).select('.node-ring')
         .transition().duration(200)
         .attr('opacity', 0.35);
@@ -310,6 +314,9 @@ nodeGroup.selectAll('g')
         });
     })
     .on('mouseleave', function(event, idx) {
+      d3.select(this).select('.node-arc')
+        .transition().duration(200)
+        .attr('opacity', 1);
       d3.select(this).select('.node-ring')
         .transition().duration(200)
         .attr('opacity', 0);
