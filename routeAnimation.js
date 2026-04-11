@@ -83,7 +83,7 @@ function _dimOtherRoutes(animCode) {
   if (!map.getLayer('route-lines')) return;
   // Linien: animierte Route ausblenden (anim-route-line übernimmt), andere stark abdunkeln
   map.setPaintProperty('route-lines', 'line-opacity', [
-    'case', ['==', ['get', 'code'], animCode], 0, 0.02
+    'case', ['==', ['get', 'code'], animCode], 0, 0.008
   ]);
   // Punkte: Kreise der animierten Route voll sichtbar lassen, andere stark abdunkeln
   if (map.getLayer('route-points')) {
@@ -186,7 +186,109 @@ function _removeAnimRoute() {
   try { if (map.getSource('anim-route'))     map.removeSource('anim-route');     } catch (_) {}
 }
 
-// ── Label (Artname) einblenden ────────────────────────────────────────────────
+// ── Catmull-Rom Spline – fließende Kamerabewegung ────────────────────────────
+
+/**
+ * Interpoliert einen Punkt auf dem Catmull-Rom-Segment [p1 → p2]
+ * mit den Führungspunkten p0 (vor p1) und p3 (nach p2).
+ */
+function _catmullRomPt(p0, p1, p2, p3, t) {
+  const t2 = t * t, t3 = t2 * t;
+  return {
+    lon: 0.5 * (2*p1.lon + (-p0.lon + p2.lon)*t + (2*p0.lon - 5*p1.lon + 4*p2.lon - p3.lon)*t2 + (-p0.lon + 3*p1.lon - 3*p2.lon + p3.lon)*t3),
+    lat: 0.5 * (2*p1.lat + (-p0.lat + p2.lat)*t + (2*p0.lat - 5*p1.lat + 4*p2.lat - p3.lat)*t2 + (-p0.lat + 3*p1.lat - 3*p2.lat + p3.lat)*t3),
+  };
+}
+
+/**
+ * Baut ein nach Bogenlänge gleichmäßig abgetastetes Sample-Array
+ * aus einer Catmull-Rom-Spline durch alle Wegpunkte.
+ */
+function _buildSplineSamples(pts, sampleCount = 1200) {
+  const n = pts.length;
+  if (n < 2) return pts.map(p => ({ lon: p.lon, lat: p.lat }));
+
+  // Spline dicht abtasten (30 Schritte pro Segment)
+  const STEPS = 30;
+  const raw = [];
+  for (let i = 0; i < n - 1; i++) {
+    const p0 = pts[Math.max(0, i - 1)];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[Math.min(n - 1, i + 2)];
+    for (let s = 0; s < STEPS; s++) {
+      raw.push(_catmullRomPt(p0, p1, p2, p3, s / STEPS));
+    }
+  }
+  raw.push({ lon: pts[n - 1].lon, lat: pts[n - 1].lat });
+
+  // Kumulative Bogenlänge (in °-Einheiten, ausreichend für gleichmäßiges Resampling)
+  const cumLen = [0];
+  for (let i = 1; i < raw.length; i++) {
+    const dx = raw[i].lon - raw[i - 1].lon;
+    const dy = raw[i].lat - raw[i - 1].lat;
+    cumLen.push(cumLen[i - 1] + Math.sqrt(dx * dx + dy * dy));
+  }
+  const totalLen = cumLen[cumLen.length - 1];
+
+  // Gleichmäßig nach Bogenlänge resampling
+  const samples = [];
+  for (let s = 0; s < sampleCount; s++) {
+    const target = (s / (sampleCount - 1)) * totalLen;
+    let lo = 0, hi = cumLen.length - 1;
+    while (lo < hi - 1) {
+      const mid = (lo + hi) >> 1;
+      if (cumLen[mid] <= target) lo = mid; else hi = mid;
+    }
+    const f = (cumLen[hi] - cumLen[lo]) > 0
+      ? (target - cumLen[lo]) / (cumLen[hi] - cumLen[lo])
+      : 0;
+    samples.push({
+      lon: raw[lo].lon + (raw[hi].lon - raw[lo].lon) * f,
+      lat: raw[lo].lat + (raw[hi].lat - raw[lo].lat) * f,
+    });
+  }
+  return samples;
+}
+
+/**
+ * Fährt die Kamera kontinuierlich entlang der Spline-Samples.
+ * Kein Stop an Zwischenpunkten – fließende Kurvenfahrt.
+ */
+function _animateSpline(pts, totalDuration) {
+  const samples = _buildSplineSamples(pts);
+  const last    = samples[samples.length - 1];
+
+  return new Promise(resolve => {
+    const startTime = performance.now();
+
+    function frame(now) {
+      if (_animAbort) { resolve(false); return; }
+
+      const t   = Math.min((now - startTime) / totalDuration, 1);
+      const idx = t * (samples.length - 1);
+      const i0  = Math.floor(idx);
+      const i1  = Math.min(i0 + 1, samples.length - 1);
+      const f   = idx - i0;
+
+      map.setCenter([
+        samples[i0].lon + (samples[i1].lon - samples[i0].lon) * f,
+        samples[i0].lat + (samples[i1].lat - samples[i0].lat) * f,
+      ]);
+
+      if (t < 1) {
+        requestAnimationFrame(frame);
+      } else {
+        map.setCenter([last.lon, last.lat]); // exakt am Zielpunkt landen
+        resolve(true);
+      }
+    }
+
+    requestAnimationFrame(frame);
+  });
+}
+
+
 let _labelEl = null;
 
 function _showLabel(text) {
@@ -275,7 +377,7 @@ async function playRouteAnimation(routeCode) {
   // ── 2. Zum Origin fahren – easeTo hält den Zoom konstant (kein Bogenkurven-Dip) ──
   await _easeTo({
     center:    [origin.lon, origin.lat],
-    zoom:      5.9,
+    zoom:      6,
     duration:  segDuration,
     essential: true,
     easing:    t => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t,
@@ -287,27 +389,11 @@ async function playRouteAnimation(routeCode) {
   await _wait(1000);
   if (_animAbort) { _cleanup(); return; }
 
-  // ── 3. Segment für Segment entlangfahren ──────────────────────────────────
-  // easeTo: kein Zoom-Bogenkurve, Detailgrad bleibt durchgängig konstant.
-
-  for (let i = 1; i < pts.length; i++) {
-    if (_animAbort) { _cleanup(); return; }
-
-    const to = pts[i];
-
-    await _easeTo({
-      center:    [to.lon, to.lat],
-      duration:  segDuration,
-      essential: true,
-      easing:    t => t,
-    });
-    if (_animAbort) { _cleanup(); return; }
-
-    // Kurze Pause an Zwischenstopps, längere an der Destination
-    const pause = (to.node === 'Destination') ? 1400 : (to.node === 'Transit locations' ? 350 : 600);
-    await _wait(pause / window.ANIMATION_SPEED);
-    if (_animAbort) { _cleanup(); return; }
-  }
+  // ── 3. Kontinuierliche Spline-Fahrt entlang der Route ────────────────────
+  // Catmull-Rom-Kurve durch alle Wegpunkte – kein Stop, kein Zoom-Sprung.
+  const totalRouteDuration = (pts.length - 1) * segDuration;
+  const ok = await _animateSpline(pts, totalRouteDuration);
+  if (!ok || _animAbort) { _cleanup(); return; }
 
   // ── 4. Abschluss: Zoom out auf Gesamtroute ────────────────────────────────
   await _wait(600);
