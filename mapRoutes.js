@@ -336,12 +336,10 @@ function registerInteraction() {
     // Hover-Tooltip zeigen – aber nicht wenn es dieselbe Route wie die fixierte ist
     if (props.code !== selectedRoute) {
       hoverTooltip.innerHTML = buildTooltipHTML(props);
-      // Position relativ zum Map-Container
       const mapRect = map.getContainer().getBoundingClientRect();
       const relX = e.originalEvent.clientX - mapRect.left;
       const relY = e.originalEvent.clientY - mapRect.top;
-      hoverTooltip.style.left = (relX + 14) + 'px';
-      hoverTooltip.style.top  = (relY - 10) + 'px';
+      positionTooltip(hoverTooltip, relX, relY, mapRect.width, mapRect.height);
       hoverTooltip.style.opacity = '1';
     }
   });
@@ -373,12 +371,10 @@ function registerInteraction() {
 
       // Fixiertes Tooltip an Klick-Position setzen
   fixedTooltip.innerHTML = buildTooltipHTML(props);
-  // Position relativ zum Map-Container
-  const mapRect = map.getContainer().getBoundingClientRect();
-  const relX = e.originalEvent.clientX - mapRect.left;
-  const relY = e.originalEvent.clientY - mapRect.top;
-  fixedTooltip.style.left = (relX + 14) + 'px';
-  fixedTooltip.style.top  = (relY - 10) + 'px';
+  const mapRect2 = map.getContainer().getBoundingClientRect();
+  const relX2 = e.originalEvent.clientX - mapRect2.left;
+  const relY2 = e.originalEvent.clientY - mapRect2.top;
+  positionTooltip(fixedTooltip, relX2, relY2, mapRect2.width, mapRect2.height);
   fixedTooltip.style.opacity = '1';
 
       // Geografische Position merken damit Tooltip beim Zoomen/Bewegen folgt
@@ -411,15 +407,31 @@ function registerInteraction() {
 // Geografischer Ankerpunkt für das fixierte Tooltip
 let selectedRoute_lngLat = null;
 
+// Tooltip innerhalb des Containers positionieren – wechselt die Seite wenn nötig
+function positionTooltip(tooltipEl, relX, relY, containerW, containerH) {
+  const padding = 14;
+  const ttW = tooltipEl.offsetWidth  || 0;
+  const ttH = tooltipEl.offsetHeight || 0;
+
+  let left = relX + padding;
+  let top  = relY - 10;
+
+  if (left + ttW > containerW - 8) left = relX - padding - ttW;
+  if (left < 8) left = 8;
+  if (top + ttH > containerH - 8) top = containerH - ttH - 8;
+  if (top < 8) top = 8;
+
+  tooltipEl.style.left = left + 'px';
+  tooltipEl.style.top  = top  + 'px';
+}
+
 // Fixiertes Tooltip neu positionieren wenn Karte bewegt/gezoomt wird
 function updateFixedTooltipPosition() {
   if (!selectedRoute || !selectedRoute_lngLat) return;
 
-  // Geo-Koordinaten → Pixel
-  const px = map.project(selectedRoute_lngLat);
-
-  fixedTooltip.style.left = (px.x + 14) + 'px';
-  fixedTooltip.style.top  = (px.y - 10) + 'px';
+  const px        = map.project(selectedRoute_lngLat);
+  const container = map.getContainer();
+  positionTooltip(fixedTooltip, px.x, px.y, container.clientWidth, container.clientHeight);
 }
 
 // Linienbreite je nach Auswahl setzen
@@ -443,6 +455,10 @@ function applySelectionStyle() {
     const connections = getVisibleMonthConnections();
     updateMonthFilterConnections(connections);
   }
+
+  // Pfeil & Kreuz der selektierten Route aktualisieren – falls sie durch den
+  // neuen Filter nicht mehr sichtbar ist, werden die Symbole geleert
+  if (map.getSource('highlight-symbols')) updateHighlightSymbols();
 }
 
 
@@ -459,8 +475,9 @@ function updateHighlightSymbols() {
     return;
   }
 
-  // Finde die Route mit dem entsprechenden Code
-  const route = allRoutes.find(r => r.code === activeRoute);
+  // Finde die Route mit dem entsprechenden Code â nur unter den aktuell sichtbaren Routen,
+  // damit Symbole verschwinden wenn die selektierte Route rausgefiltert wird
+  const route = getVisibleRoutes().find(r => r.code === activeRoute);
   if (!route || !route.points || route.points.length === 0) {
     map.getSource('highlight-symbols').setData({ 
       type: 'FeatureCollection', 
@@ -565,9 +582,15 @@ function buildTooltipHTML(props) {
     const em = props.endMonth   ? parseInt(props.endMonth)   : NaN;
     const y  = props.year ? props.year : '';
     if (!isNaN(sm) && !isNaN(em)) {
-      const sName = MONTH_NAMES[Math.max(0, Math.min(11, sm - 1))] || sm;
-      const eName = MONTH_NAMES[Math.max(0, Math.min(11, em - 1))] || em;
-      durationLine = `${sName}${y ? ', ' + y : ''} - ${eName}${y ? ', ' + y : ''}`;
+      const [first, second] = sm <= em ? [sm, em] : [em, sm];
+      const firstName  = MONTH_NAMES[Math.max(0, Math.min(11, first  - 1))] || first;
+      const secondName = MONTH_NAMES[Math.max(0, Math.min(11, second - 1))] || second;
+      const yStr = y ? ', ' + y : '';
+      if (first === second) {
+        durationLine = `${firstName}${yStr}`;
+      } else {
+        durationLine = `${firstName}${yStr} – ${secondName}${yStr}`;
+      }
     }
   } catch (e) { durationLine = ''; }
 
