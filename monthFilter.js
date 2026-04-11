@@ -200,6 +200,9 @@ function drawmonthFilter(container, connections) {
         showTooltip(svg, event,
           `${sName} → ${tName}: ${v} routes`);
       })
+      .on('mousemove', function(event) {
+        moveTooltip(event);
+      })
       .on('mouseleave', function() {
         hideTooltip();
         resetPaths();
@@ -294,6 +297,7 @@ nodeGroup.selectAll('g')
       d3.select(this).select('.node-ring')
         .transition().duration(200)
         .attr('opacity', 0.35);
+      showTooltip(svg, event, MONTH_NAMES[idx]);
 
       connectionGroup.selectAll('path')
         .transition().duration(200)
@@ -313,6 +317,9 @@ nodeGroup.selectAll('g')
               : 0.6 + (v / maxValue) * 1.5);
         });
     })
+    .on('mousemove', function(event) {
+      moveTooltip(event);
+    })
     .on('mouseleave', function(event, idx) {
       d3.select(this).select('.node-arc')
         .transition().duration(200)
@@ -320,6 +327,7 @@ nodeGroup.selectAll('g')
       d3.select(this).select('.node-ring')
         .transition().duration(200)
         .attr('opacity', 0);
+      hideTooltip();
 
       connectionGroup.selectAll('path')
         .transition().duration(200)
@@ -392,45 +400,29 @@ function showTooltip(svg, event, text) {
       .style('white-space', 'nowrap')
       .style('border', '1px solid rgba(255,255,255,0.3)');
   }
-  
-  // Text setzen und Tooltip unsichtbar positionieren, um Größe zu messen
-  tooltipDiv
-    .text(text)
-    .style('opacity', '0')
-    .style('left', '0px')
-    .style('top', '0px');
+  tooltipDiv.text(text).style('opacity', '0').style('left', '0px').style('top', '0px');
+  moveTooltip(event);
+  tooltipDiv.style('opacity', '1');
+}
 
+function moveTooltip(event) {
+  if (!tooltipDiv) return;
   const tooltipEl = tooltipDiv.node();
-  const ttRect = tooltipEl.getBoundingClientRect();
-  const ttWidth = ttRect.width || tooltipEl.offsetWidth || 0;
-  const ttHeight = ttRect.height || tooltipEl.offsetHeight || 0;
-
-  // event.pageX/Y sind nicht in allen Browsern verfügbar (z.B. Safari auf iOS), daher Fallback auf clientX/Y + scroll
+  const ttRect    = tooltipEl.getBoundingClientRect();
+  const ttWidth   = ttRect.width  || tooltipEl.offsetWidth  || 0;
+  const ttHeight  = ttRect.height || tooltipEl.offsetHeight || 0;
   const pageX = (typeof event.pageX === 'number') ? event.pageX : (event.clientX + window.scrollX);
   const pageY = (typeof event.pageY === 'number') ? event.pageY : (event.clientY + window.scrollY);
-
   const padding = 10;
   let left = pageX + padding;
   let top  = pageY - 10;
-
-  // Wenn Tooltip über den rechten Rand hinausgehen würde, links positionieren
   const viewportRight = window.scrollX + window.innerWidth;
-  if (left + ttWidth > viewportRight - 8) {
-    left = pageX - padding - ttWidth;
-  }
+  if (left + ttWidth > viewportRight - 8) left = pageX - padding - ttWidth;
   if (left < window.scrollX + 8) left = window.scrollX + 8;
-
-  // Wenn Tooltip über den unteren Rand hinausgehen würde, nach oben positionieren
   const viewportBottom = window.scrollY + window.innerHeight;
-  if (top + ttHeight > viewportBottom - 8) {
-    top = viewportBottom - ttHeight - 8;
-  }
+  if (top + ttHeight > viewportBottom - 8) top = viewportBottom - ttHeight - 8;
   if (top < window.scrollY + 8) top = window.scrollY + 8;
-
-  tooltipDiv
-    .style('left', left + 'px')
-    .style('top',  top  + 'px')
-    .style('opacity', '1');
+  tooltipDiv.style('left', left + 'px').style('top', top + 'px');
 }
 
 function hideTooltip() {
