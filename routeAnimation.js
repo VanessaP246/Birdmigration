@@ -485,3 +485,23 @@ function _cleanup() {
     _showUI();
   }, 500);
 }
+
+/** Wartet bis die Karte vollständig gerendert ist (keine fehlenden Tiles mehr). */
+function _waitForTiles() {
+  return new Promise(resolve => {
+    if (_animAbort) { resolve(false); return; }
+    
+    // Wenn die Karte bereits idle ist, sofort weitermachen
+    if (map.loaded() && !map.isMoving()) {
+      resolve(true);
+      return;
+    }
+
+    // Sonst auf das 'idle' Event warten – feuert wenn alle Tiles geladen sind
+    const onIdle = () => {
+      map.off('idle', onIdle);
+      resolve(true);
+    };
+    map.on('idle', onIdle);
+  });
+}
