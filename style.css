@@ -503,3 +503,20 @@ h1 {
 .legend-label {
   margin-left: var(--legend-symbol-gap);
 }
+
+/* Weißes Rechteck komplett verstecken wenn Panel geschlossen */
+.maplibregl-ctrl-attrib.maplibregl-compact:not(.maplibregl-compact-show) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.maplibregl-ctrl-attrib.maplibregl-compact:not(.maplibregl-compact-show) .maplibregl-ctrl-attrib-inner {
+  display: none !important;
+}
+
+/* i-Button immer mit weißem Hintergrund */
+.maplibregl-ctrl-attrib.maplibregl-compact:not(.maplibregl-compact-show) .maplibregl-ctrl-attrib-button {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+}
