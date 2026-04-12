@@ -204,7 +204,7 @@ function _catmullRomPt(p0, p1, p2, p3, t) {
  * Baut ein nach Bogenlänge gleichmäßig abgetastetes Sample-Array
  * aus einer Catmull-Rom-Spline durch alle Wegpunkte.
  */
-function _buildSplineSamples(pts, sampleCount = 2500) {
+function _buildSplineSamples(pts, sampleCount = 1200) {
   const n = pts.length;
   if (n < 2) return pts.map(p => ({ lon: p.lon, lat: p.lat }));
 
@@ -255,57 +255,9 @@ function _buildSplineSamples(pts, sampleCount = 2500) {
  * Fährt die Kamera kontinuierlich entlang der Spline-Samples.
  * Kein Stop an Zwischenpunkten – fließende Kurvenfahrt.
  */
-// function _animateSpline(pts, totalDuration) {
-//   const samples = _buildSplineSamples(pts);
-//   const last    = samples[samples.length - 1];
-
-//   return new Promise(resolve => {
-//     const startTime = performance.now();
-
-//     function frame(now) {
-//       if (_animAbort) { resolve(false); return; }
-
-//       const t   = Math.min((now - startTime) / totalDuration, 1);
-//       const idx = t * (samples.length - 1);
-//       const i0  = Math.floor(idx);
-//       const i1  = Math.min(i0 + 1, samples.length - 1);
-//       const f   = idx - i0;
-
-//       map.setCenter([
-//         samples[i0].lon + (samples[i1].lon - samples[i0].lon) * f,
-//         samples[i0].lat + (samples[i1].lat - samples[i0].lat) * f,
-//       ]);
-
-//       if (t < 1) {
-//         requestAnimationFrame(frame);
-//       } else {
-//         map.setCenter([last.lon, last.lat]); // exakt am Zielpunkt landen
-//         resolve(true);
-//       }
-//     }
-
-//     requestAnimationFrame(frame);
-//   });
-// }
 function _animateSpline(pts, totalDuration) {
-  const samples = _buildSplineSamples(pts, 2000); // mehr Samples für feinere Kurve
-
-  // Gleitender Durchschnitt über die Samples – glättet Zickzack-Bewegungen
-  // windowSize: je größer, desto sanfter (aber auch ungenauer zur echten Route)
-  const windowSize = Math.max(1, Math.floor(samples.length * 0.04)); // 4% der Samples
-  const smoothed = samples.map((_, i) => {
-    const from = Math.max(0, i - windowSize);
-    const to   = Math.min(samples.length - 1, i + windowSize);
-    let lon = 0, lat = 0;
-    for (let j = from; j <= to; j++) {
-      lon += samples[j].lon;
-      lat += samples[j].lat;
-    }
-    const count = to - from + 1;
-    return { lon: lon / count, lat: lat / count };
-  });
-
-  const last = pts[pts.length - 1]; // echter Endpunkt, nicht geglättet
+  const samples = _buildSplineSamples(pts);
+  const last    = samples[samples.length - 1];
 
   return new Promise(resolve => {
     const startTime = performance.now();
@@ -314,20 +266,20 @@ function _animateSpline(pts, totalDuration) {
       if (_animAbort) { resolve(false); return; }
 
       const t   = Math.min((now - startTime) / totalDuration, 1);
-      const idx = t * (smoothed.length - 1);
+      const idx = t * (samples.length - 1);
       const i0  = Math.floor(idx);
-      const i1  = Math.min(i0 + 1, smoothed.length - 1);
+      const i1  = Math.min(i0 + 1, samples.length - 1);
       const f   = idx - i0;
 
       map.setCenter([
-        smoothed[i0].lon + (smoothed[i1].lon - smoothed[i0].lon) * f,
-        smoothed[i0].lat + (smoothed[i1].lat - smoothed[i0].lat) * f,
+        samples[i0].lon + (samples[i1].lon - samples[i0].lon) * f,
+        samples[i0].lat + (samples[i1].lat - samples[i0].lat) * f,
       ]);
 
       if (t < 1) {
         requestAnimationFrame(frame);
       } else {
-        map.setCenter([last.lon, last.lat]);
+        map.setCenter([last.lon, last.lat]); // exakt am Zielpunkt landen
         resolve(true);
       }
     }
@@ -335,6 +287,7 @@ function _animateSpline(pts, totalDuration) {
     requestAnimationFrame(frame);
   });
 }
+
 
 let _labelEl = null;
 
@@ -364,6 +317,41 @@ function _showLabel(text) {
 
 function _hideLabel() {
   if (_labelEl) { _labelEl.style.opacity = '0'; }
+}
+
+// ── Tile-Vorladung ────────────────────────────────────────────────────────────
+
+/**
+ * Lädt Kartenkacheln für die gesamte Route vorab, bevor die Animation beginnt.
+ * Springt still durch gleichmäßig verteilte Stützpunkte bei targetZoom und
+ * wartet an jedem Punkt, bis map.areTilesLoaded() true ist (idle-Event).
+ *
+ * @param {Array}  pts        – Route-Punkte mit {lon, lat}
+ * @param {number} targetZoom – Zoom-Level der späteren Animation (Standard: 6)
+ * @param {number} samples    – Anzahl der Stützpunkte (Standard: 12)
+ */
+async function _preloadTilesForRoute(pts, targetZoom = 6, samples = 35) {
+  // Gleichmäßig verteilte Indizes über die gesamte Route
+  const indices = [];
+  const step = (pts.length - 1) / Math.max(1, samples - 1);
+  for (let i = 0; i < samples; i++) {
+    indices.push(Math.min(Math.round(i * step), pts.length - 1));
+  }
+  const uniqueIndices = [...new Set(indices)];
+
+  for (const idx of uniqueIndices) {
+    if (_animAbort) return false;
+
+    map.setCenter([pts[idx].lon, pts[idx].lat]);
+    map.setZoom(targetZoom);
+
+    // Warten bis alle sichtbaren Tiles des aktuellen Ausschnitts geladen sind
+    await new Promise(resolve => {
+      if (map.areTilesLoaded()) { resolve(); return; }
+      map.once('idle', resolve);
+    });
+  }
+  return true;
 }
 
 // ── Hauptfunktion ─────────────────────────────────────────────────────────────
@@ -410,6 +398,14 @@ async function playRouteAnimation(routeCode) {
   _showAnimRoute(route);
   _showRouteSymbols(route);      // ▲ und ✕ dauerhaft einblenden
 
+  // ── 0. Tiles vorab laden ───────────────────────────────────────────────────
+  // Vor dem sichtbaren Animationsstart alle Kacheln der Route bei Zoom 6 laden,
+  // damit die Kamera später ohne Nachladeruckler durchfliegen kann.
+  _showLabel('Lade Kartendaten \u2026');
+  const tilesReady = await _preloadTilesForRoute(pts, 6);
+  _hideLabel();
+  if (!tilesReady || _animAbort) { _cleanup(); return; }
+
   // ── 1. Zurück auf Zoom 0 ──────────────────────────────────────────────────
   map.flyTo({ zoom: 0, duration: 1200 / window.ANIMATION_SPEED, essential: true });
   await _waitForIdle();
@@ -442,23 +438,7 @@ async function playRouteAnimation(routeCode) {
   const ok = await _animateSpline(pts, totalRouteDuration);
   if (!ok || _animAbort) { _cleanup(); return; }
 
-  // ── 4. Abschluss: Zoom out auf Gesamtroute ────────────────────────────────
-  await _wait(600);
-  if (_animAbort) { _cleanup(); return; }
-
-  // Bounding Box der Route berechnen
-  const lons = pts.map(p => p.lon);
-  const lats = pts.map(p => p.lat);
-  const bounds = [[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]];
-
-  map.fitBounds(bounds, {
-    padding:   80,
-    duration:  2800 / window.ANIMATION_SPEED,
-    essential: true,
-  });
-  await _waitForIdle();
-  if (_animAbort) { _cleanup(); return; }
-
+  // ── 4. Abschluss: auf letztem Punkt stehen bleiben ───────────────────────
   await _wait(2000);
 
   // ── 5. Aufräumen & alles zurücksetzen ────────────────────────────────────
