@@ -1,19 +1,3 @@
-// function preload(){
-//     csvRohtext = loadTable('data/Bird migration dataset.csv', 'csv', 'header');
-//     // backgroundImage = loadImage('data/mapaMundi1800x600.png');
-// }
-
-// function setup() {
-//     let canvas = createCanvas(100, 100);
-//     canvas.parent('map-area');
-
-//     // DEBUG: Spaltennamen ausgeben
-//     console.log('Spalten:', csvRohtext.columns);
-//     console.log('Erste Zeile:', csvRohtext.getRow(0).arr);
-
-//     initMapRoutes(csvRohtext);
-// }
-
 let csvRohtext = null;
 
 function preload() {

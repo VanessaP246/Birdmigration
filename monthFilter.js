@@ -239,11 +239,6 @@ function drawmonthFilter(container, connections) {
     .innerRadius(arcInnerR)
     .outerRadius(arcOuterR);
 
-  // Hover-Bogen: leicht nach außen vergrößert
-  // const arcHoverGen = d3.arc()
-  //   .innerRadius(arcInnerR - 3)
-  //   .outerRadius(arcOuterR + 4);
-
   // Nodes als Kreisbogenausschnitte
 const nodeGroup = g.append('g').attr('class', 'nodes');
 

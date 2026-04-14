@@ -1,17 +1,11 @@
 // birdFilter.js
 // Sunburst-Diagramm für den Vogel-Filter.
-// Anbindung an die Karte: onBirdFilterChange() ganz unten.
-//
-// Verfügbarkeit (Jahr/Monat-Filter):
-//   - Segmente werden NUR per Opacity aus-/eingeblendet
-//   - Die Partition wird IMMER mit allen Daten berechnet (Ringe bleiben geschlossen)
-//   - Beim Zoom wird die Partition NICHT neu berechnet
 
 
-// ── Hierarchie-Daten ───────────────────────────────────────
+// Hierarchie-Daten
 const BIRD_DATA = {"name": "root", "children": [{"name": "Accipitriformes", "children": [{"name": "Pandionidae", "children": [{"name": "Pandion", "children": [{"name": "Osprey", "value": 2240}]}]}, {"name": "Accipitridae", "children": [{"name": "Buteo", "children": [{"name": "Ferruginous Hawk", "value": 176}, {"name": "Eurasian Buzzard", "value": 157}, {"name": "Japanese Buzzard", "value": 72}, {"name": "Swainson's Hawk", "value": 517}, {"name": "Long-legged Buzzard", "value": 49}]}, {"name": "Clanga", "children": [{"name": "Lesser Spotted Eagle", "value": 387}, {"name": "Greater Spotted Eagle", "value": 73}]}, {"name": "Pernis", "children": [{"name": "European Honey-buzzard", "value": 1593}]}, {"name": "Haliaeetus", "children": [{"name": "Steller's Sea-eagle", "value": 9}, {"name": "White-tailed Sea-eagle", "value": 6}, {"name": "Bald Eagle", "value": 22}]}, {"name": "Aquila", "children": [{"name": "Steppe Eagle", "value": 323}]}, {"name": "Circus", "children": [{"name": "Western Marsh-harrier", "value": 519}, {"name": "Montagu's Harrier", "value": 1783}]}, {"name": "Milvus", "children": [{"name": "Black Kite", "value": 392}, {"name": "Red Kite", "value": 144}]}, {"name": "Aegypius", "children": [{"name": "Cinereous Vulture", "value": 243}]}, {"name": "Accipiter", "children": [{"name": "Levant Sparrowhawk", "value": 57}]}, {"name": "Hieraaetus", "children": [{"name": "Booted Eagle", "value": 175}]}]}]}, {"name": "Falconiformes", "children": [{"name": "Falconidae", "children": [{"name": "Falco", "children": [{"name": "Sooty Falcon", "value": 518}, {"name": "Lesser Kestrel", "value": 824}, {"name": "Eleonora's Falcon", "value": 1197}, {"name": "Amur Falcon", "value": 48}, {"name": "Peregrine Falcon", "value": 585}]}]}]}, {"name": "Gruiformes", "children": [{"name": "Gruidae", "children": [{"name": "Grus", "children": [{"name": "White-naped Crane", "value": 72}, {"name": "Red-crowned Crane", "value": 11}]}, {"name": "Leucogeranus", "children": [{"name": "Siberian Crane", "value": 88}]}, {"name": "Anthropoides", "children": [{"name": "Demoiselle Crane", "value": 662}]}]}]}, {"name": "Passeriformes", "children": [{"name": "Vireonidae", "children": [{"name": "Vireo", "children": [{"name": "Vireo olivaceus", "value": 677}]}]}, {"name": "Fringillidae", "children": [{"name": "Chloris", "children": [{"name": "European Greenfinch", "value": 159}]}, {"name": "Carpodacus", "children": [{"name": "Common Rosefinch", "value": 254}]}]}, {"name": "Parulidae", "children": [{"name": "Setophaga", "children": [{"name": "Blackpoll Warbler", "value": 860}]}, {"name": "Icteria", "children": [{"name": "Yellow-breasted Chat", "value": 41}]}, {"name": "Cardellina", "children": [{"name": "Canada Warbler", "value": 1649}]}, {"name": "Vermivora", "children": [{"name": "Vermivora chrysoptera", "value": 904}]}]}, {"name": "Hirundinidae", "children": [{"name": "Hirundo", "children": [{"name": "Barn Swallow", "value": 1721}]}, {"name": "Riparia", "children": [{"name": "Collared Sand Martin", "value": 33}]}]}, {"name": "Emberizidae", "children": [{"name": "Emberiza", "children": [{"name": "Ortolan Bunting", "value": 710}]}]}, {"name": "Laniidae", "children": [{"name": "Lanius", "children": [{"name": "Red-backed Shrike", "value": 1248}]}]}, {"name": "Mimidae", "children": [{"name": "Dumetella", "children": [{"name": "Grey Catbird", "value": 58}]}]}, {"name": "Phylloscopidae", "children": [{"name": "Phylloscopus", "children": [{"name": "Phylloscopus trochilus", "value": 1375}]}]}, {"name": "Sylviidae", "children": [{"name": "Curruca", "children": [{"name": "Common Whitethroat", "value": 579}]}]}, {"name": "Tyrannidae", "children": [{"name": "Tyrannus", "children": [{"name": "Eastern Kingbird", "value": 119}]}]}, {"name": "Troglodytidae", "children": [{"name": "Troglodytes", "children": [{"name": "House Wren", "value": 137}]}]}]}, {"name": "Ciconiiformes", "children": [{"name": "Ciconiidae", "children": [{"name": "Ciconia", "children": [{"name": "Oriental Stork", "value": 161}, {"name": "Black Stork", "value": 344}, {"name": "White Stork", "value": 132}]}]}]}, {"name": "Charadriiformes", "children": [{"name": "Scolopacidae", "children": [{"name": "Calidris", "children": [{"name": "Temminck's Stint", "value": 385}, {"name": "Purple Sandpiper", "value": 80}, {"name": "Red Knot", "value": 264}, {"name": "Buff-breasted Sandpiper", "value": 289}, {"name": "Dunlin", "value": 226}]}, {"name": "Limosa", "children": [{"name": "Bar-tailed Godwit", "value": 115}]}, {"name": "Numenius", "children": [{"name": "Far Eastern Curlew", "value": 182}, {"name": "Eurasian Curlew", "value": 90}, {"name": "Whimbrel", "value": 417}]}, {"name": "Bartramia", "children": [{"name": "Upland Sandpiper", "value": 453}]}, {"name": "Scolopax", "children": [{"name": "Eurasian Woodcock", "value": 119}, {"name": "American Woodcock", "value": 245}]}, {"name": "Tringa", "children": [{"name": "Common Redshank", "value": 602}]}, {"name": "Phalaropus", "children": [{"name": "Red-necked Phalarope", "value": 1704}]}, {"name": "Gallinago", "children": [{"name": "Great Snipe", "value": 1371}]}]}, {"name": "Laridae", "children": [{"name": "Larus", "children": [{"name": "Lesser Black-backed Gull", "value": 652}, {"name": "Pallas's Gull", "value": 224}, {"name": "Iceland Gull", "value": 21}]}, {"name": "Sterna", "children": [{"name": "Common Tern", "value": 1013}]}]}, {"name": "Haematopodidae", "children": [{"name": "Haematopus", "children": [{"name": "Eurasian Oystercatcher", "value": 2}]}]}, {"name": "Charadriidae", "children": [{"name": "Charadrius", "children": [{"name": "Mountain Plover", "value": 42}, {"name": "Common Rosefinch", "value": 640}]}, {"name": "Pluvialis", "children": [{"name": "Pacific Golden Plover", "value": 199}]}]}, {"name": "Stercorariidae", "children": [{"name": "Stercorarius", "children": [{"name": "Pomarine Jaeger", "value": 529}]}]}]}, {"name": "Anseriformes", "children": [{"name": "Anatidae", "children": [{"name": "Anas", "children": [{"name": "Common Teal", "value": 65}, {"name": "American Black Duck", "value": 115}, {"name": "Indian Spot-billed Duck", "value": 65}, {"name": "Mallard", "value": 176}, {"name": "Northern Pintail", "value": 201}]}, {"name": "Anser", "children": [{"name": "Lesser White-fronted Goose", "value": 160}, {"name": "Greylag Goose", "value": 49}, {"name": "Bar-headed Goose", "value": 128}, {"name": "Greater White-fronted Goose", "value": 446}, {"name": "Bean Goose", "value": 115}, {"name": "Pink-footed Goose", "value": 35}, {"name": "Swan Goose", "value": 25}]}, {"name": "Mareca", "children": [{"name": "Falcated Duck", "value": 65}, {"name": "Eurasian Wigeon", "value": 194}]}, {"name": "Sibirionetta", "children": [{"name": "Baikal Teal", "value": 65}]}, {"name": "Spatula", "children": [{"name": "Cinnamon Teal", "value": 54}, {"name": "Garganey", "value": 65}]}, {"name": "Branta", "children": [{"name": "Brent Goose", "value": 47}, {"name": "Barnacle Goose", "value": 62}]}, {"name": "Cygnus", "children": [{"name": "Tundra Swan", "value": 51}, {"name": "Trumpeter Swan", "value": 11}]}, {"name": "Chloephaga", "children": [{"name": "Upland Goose", "value": 6}]}, {"name": "Aythya", "children": [{"name": "Ring-necked Duck", "value": 149}]}, {"name": "Tadorna", "children": [{"name": "Ruddy Shelduck", "value": 169}]}]}]}, {"name": "Pelecaniformes", "children": [{"name": "Pelecanidae", "children": [{"name": "Pelecanus", "children": [{"name": "Great White Pelican", "value": 163}]}]}, {"name": "Ardeidae", "children": [{"name": "Botaurus", "children": [{"name": "American Bittern", "value": 209}]}, {"name": "Nycticorax", "children": [{"name": "Black-crowned Night-heron", "value": 83}]}, {"name": "Egretta", "children": [{"name": "Chinese Egret", "value": 305}]}]}, {"name": "Threskiornithidae", "children": [{"name": "Platalea", "children": [{"name": "Eurasian Spoonbill", "value": 527}]}]}]}, {"name": "Suliformes", "children": [{"name": "Phalacrocoracidae", "children": [{"name": "Nannopterum", "children": [{"name": "Double-crested Cormorant", "value": 122}]}]}]}, {"name": "Strigiformes", "children": [{"name": "Strigidae", "children": [{"name": "Athene", "children": [{"name": "Burrowing Owl", "value": 61}]}, {"name": "Psiloscops", "children": [{"name": "Flammulated Owl", "value": 100}]}, {"name": "Asio", "children": [{"name": "Short-eared Owl", "value": 63}]}]}]}, {"name": "Apodiformes", "children": [{"name": "Apodidae", "children": [{"name": "Apus", "children": [{"name": "Common Swift", "value": 697}, {"name": "Pacific Swift", "value": 280}]}]}]}, {"name": "Otidiformes", "children": [{"name": "Otididae", "children": [{"name": "Otis", "children": [{"name": "Great Bustard", "value": 30}]}]}]}, {"name": "Columbiformes", "children": [{"name": "Columbidae", "children": [{"name": "Streptopelia", "children": [{"name": "European Turtle-dove", "value": 55}]}]}]}, {"name": "Gaviiformes", "children": [{"name": "Gaviidae", "children": [{"name": "Gavia", "children": [{"name": "Common Loon", "value": 75}]}]}]}, {"name": "Cuculiformes", "children": [{"name": "Cuculidae", "children": [{"name": "Cuculus", "children": [{"name": "Common Cuckoo", "value": 2702}]}]}]}, {"name": "Caprimulgiformes", "children": [{"name": "Caprimulgidae", "children": [{"name": "Caprimulgus", "children": [{"name": "European Nightjar", "value": 887}]}]}]}]};
 
-// ── Farbpaletten ───────────────────────────────────────────
+// Farbpaletten
 const COLOR_GROUPS = [
   ["#A0C3B9", "#81AFA1", "#3A5D53", "#2E4A42"],
   ["#f2dca6", "#edd088", "#E9C46A", "#BA9D55"],
@@ -31,14 +25,14 @@ const COLOR_GROUPS = [
   ["#c5c2e5", "#b1addc", "#9E99D3", "#7E7AA9"],
 ];
 
-// ── Globale Referenz für yearFilter.js / monthFilter.js ───
+// Globale Referenz für yearFilter.js / monthFilter.js
 let _updateBirdAvailability = null;
 
 function refreshBirdAvailability() {
   if (typeof _updateBirdAvailability === 'function') _updateBirdAvailability();
 }
 
-// ── Hierarchie aus allRoutes aufbauen ──────────────────────
+// Hierarchie aus allRoutes aufbauen
 function buildBirdDataFromRoutes() {
   if (typeof allRoutes === 'undefined' || allRoutes.length === 0) return null;
   const root = { name: 'root', children: [] };
@@ -61,7 +55,7 @@ function buildBirdDataFromRoutes() {
   return root;
 }
 
-// ── Hauptfunktion ──────────────────────────────────────────
+// Hauptfunktion
 function initBirdFilter() {
   const container = document.getElementById('bird-filter-block');
   if (!container) return;
@@ -125,7 +119,7 @@ function initBirdFilter() {
 
   let currentRoot = root;
 
-  // ── Tooltip ────────────────────────────────────────────
+  // Tooltip
   const tooltip = d3.select(container).append('div')
     .style('position', 'absolute').style('background', 'rgba(50,50,60,0.92)')
     .style('color', '#fff').style('border-radius', '6px').style('padding', '8px 12px')
@@ -134,7 +128,7 @@ function initBirdFilter() {
 
   const DEPTH_LABEL = ['', 'Order', 'Family', 'Genus', 'Species'];
 
-  // ── Label-Fit (binary search) ──────────────────────────
+  // Label-Fit (binary search)
   function fitLabel(node, text, maxW) {
     if (!node || !text || maxW <= 0) { if (node) node.text(''); return; }
     const el = node.node(); if (!el) return;
@@ -149,7 +143,7 @@ function initBirdFilter() {
     el.textContent = fit > 0 ? text.slice(0, fit) + '…' : '';
   }
 
-  // ── Segmente ───────────────────────────────────────────
+  // Segmente
   const paths = g.selectAll('path')
     .data(root.descendants().filter(d => d.depth > 0))
     .join('path')
@@ -177,7 +171,7 @@ function initBirdFilter() {
     .on('mouseout', function() { d3.select(this).attr('opacity', 1); tooltip.style('opacity', 0); })
     .on('click', function(event, d) { event.stopPropagation(); zoomTo(d); });
 
-  // ── Labels ─────────────────────────────────────────────
+  // Labels
   const labels = g.selectAll('text')
     .data(root.descendants().filter(d => d.depth > 0))
     .join('text')
@@ -196,7 +190,7 @@ function initBirdFilter() {
     fitLabel(node, d.data.name, Math.max(0, arcLen - 6));
   }
 
-  // ── Mittelkreis ────────────────────────────────────────
+  // Mittelkreis
   const centerCircle = g.append('circle')
     .attr('r', innerR - 4).attr('fill', '#1b2a41').attr('cursor', 'pointer')
     .on('click', () => zoomTo(root));
@@ -210,54 +204,6 @@ function initBirdFilter() {
     .attr('font-size', '1rem').attr('fill', '#ffffffaa').attr('pointer-events', 'none').text('↩');
 
   updateCenter(root);
-
-  // ── Verfügbarkeit (Jahr/Monat) – NUR Opacity, keine Partition-Änderung ──
-  // Wird von yearFilter.js / monthFilter.js via refreshBirdAvailability() aufgerufen
-  // function applyAvailability() {
-  //   if (typeof getAvailableNames !== 'function') return;
-  //   const av = getAvailableNames();
-
-  //   paths.each(function(d) {
-  //     const name = d.data.name;
-  //     let ok = true;
-  //     if (av) {
-  //       switch (d.depth) {
-  //         case 1: ok = av.orders.has(name);   break;
-  //         case 2: ok = av.families.has(name); break;
-  //         case 3: ok = av.genera.has(name);   break;
-  //         case 4: ok = av.species.has(name);  break;
-  //       }
-  //     }
-  //     // Nur anpassen wenn das Segment aktuell sichtbar ist (Zoom hat es nicht schon versteckt)
-  //     const currentlyHidden = d3.select(this).attr('opacity') === '0';
-  //     if (!ok) {
-  //       d3.select(this).attr('opacity', 0).attr('pointer-events', 'none');
-  //     } else if (currentlyHidden) {
-  //       // Nur einblenden wenn der Zoom es auch zeigen würde
-  //       const shouldShowInZoom = currentRoot === root || isDescendant(currentRoot, d);
-  //       if (shouldShowInZoom && d !== currentRoot) {
-  //         d3.select(this).attr('opacity', 1).attr('pointer-events', 'all');
-  //       }
-  //     }
-  //   });
-
-  //   // Labels entsprechend aktualisieren
-  //   labels.each(function(d) {
-  //     const node = d3.select(this);
-  //     if (node.text() === '') return; // bereits von zoomTo geleert
-  //     const name = d.data.name;
-  //     let ok = true;
-  //     if (av) {
-  //       switch (d.depth) {
-  //         case 1: ok = av.orders.has(name);   break;
-  //         case 2: ok = av.families.has(name); break;
-  //         case 3: ok = av.genera.has(name);   break;
-  //         case 4: ok = av.species.has(name);  break;
-  //       }
-  //     }
-  //     if (!ok) node.text('');
-  //   });
-  // }
 
   function applyAvailability() {
     if (typeof getAvailableNames !== 'function') return;
@@ -301,13 +247,12 @@ function initBirdFilter() {
   }
 
   // Globale Referenz – wird von yearFilter/monthFilter aufgerufen
-  // _updateBirdAvailability = applyAvailability;
 
   // setTimeout(applyAvailability, 250);
   _updateBirdAvailability = applyAvailability;
   applyAvailability(); // direkt, kein setTimeout mehr
 
-  // ── Zoom ───────────────────────────────────────────────
+  // Zoom
   function zoomTo(target) {
     if (target === currentRoot) target = root;
     currentRoot = target;
@@ -333,13 +278,6 @@ function initBirdFilter() {
 
     updateCenter(target);
     updateLabels(target, xScale2, baseDepth);
-
-//     updateCenter(target);
-// labels.text('');
-// setTimeout(() => updateLabels(target, xScale2, baseDepth), 600);
-
-    // Verfügbarkeit nach Zoom-Animation anwenden
-    // setTimeout(applyAvailability, 650);
 
     onBirdFilterChange(target === root ? null : target.data.name, target.depth);
   }
@@ -378,12 +316,12 @@ function initBirdFilter() {
   svg.on('click', () => zoomTo(root));
 }
 
-// ── Karten-Filter-Callback ─────────────────────────────────
+// Karten-Filter-Callback
 function onBirdFilterChange(name, depth) {
   if (typeof filterRoutes === 'function') filterRoutes(name, depth);
 }
 
-// ── Start ──────────────────────────────────────────────────
+// Start
 window.addEventListener('load', () => {
   setTimeout(initBirdFilter, 100);
   window.addEventListener('resize', () => setTimeout(initBirdFilter, 100));

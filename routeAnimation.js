@@ -1,4 +1,3 @@
-// ─────────────────────────────────────────────────────────────────────────────
 // routeAnimation.js  –  Bird Migration Route Animation
 //
 // USAGE (Browser-Konsole oder Skript):
@@ -9,20 +8,20 @@
 // OPTIONEN (vor dem Start setzen):
 //   ANIMATION_SPEED    = 1.0;        // 0.5 = langsamer, 2.0 = schneller
 //   ANIMATION_SEGMENT_MS = 2000;     // Feste Dauer pro Segment in Millisekunden
-// ─────────────────────────────────────────────────────────────────────────────
 
-// ── Globale Steuervariablen ───────────────────────────────────────────────────
+
+// Globale Steuervariablen
 window.ANIMATION_ROUTE      = null;   // Route code (wird mit || verglichen → allRoutes)
 window.ANIMATION_SPEED      = 1.0;   // Geschwindigkeitsfaktor
 window.ANIMATION_SEGMENT_MS = 2000;  // Gleichmäßige Flugdauer pro Segment (ms)
 
-// ── Interner Zustand ──────────────────────────────────────────────────────────
+// Interner Zustand
 let _animRunning   = false;
 let _animAbort     = false;
 let _origLegend    = '';        // gespeicherter display-Wert der Legende
 let _origHeading   = '';
 
-// ── Hilfsfunktionen ───────────────────────────────────────────────────────────
+// Hilfsfunktionen
 
 /** Wartet ms Millisekunden (abbrechbar). Gibt false zurück wenn abgebrochen. */
 function _wait(ms) {
@@ -63,7 +62,7 @@ function _easeTo(options) {
   });
 }
 
-// ── Blendet Legende + Heading aus / wieder ein ────────────────────────────────
+// Blendet Legende + Heading aus / wieder ein
 function _hideUI() {
   const legend  = document.querySelector('.legend');
   const heading = document.querySelector('.heading');
@@ -78,7 +77,7 @@ function _showUI() {
   if (heading) { heading.style.opacity = _origHeading || '1'; heading.style.pointerEvents = ''; }
 }
 
-// ── Opacity der anderen Routen ────────────────────────────────────────────────
+// Opacity der anderen Routen
 function _dimOtherRoutes(animCode) {
   if (!map.getLayer('route-lines')) return;
   // Linien: animierte Route ausblenden (anim-route-line übernimmt), andere stark abdunkeln
@@ -100,7 +99,7 @@ function _restoreOpacity() {
     map.setPaintProperty('route-points', 'circle-opacity', 1);
 }
 
-// ── Dreieck (▲) und Kreuz (✕) für die animierte Route dauerhaft anzeigen ─────
+// Dreieck (▲) und Kreuz (✕) für die animierte Route dauerhaft anzeigen
 
 /** Befüllt den highlight-symbols-Layer mit Origin (▲) und Destination (✕) der Route. */
 function _showRouteSymbols(route) {
@@ -154,7 +153,7 @@ function _bearing(from, to) {
   return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
 }
 
-// ── Highlighted Route-Linie (nur die animierte Route, voll sichtbar) ──────────
+// Highlighted Route-Linie (nur die animierte Route, voll sichtbar
 function _showAnimRoute(route) {
   const geojson = {
     type: 'FeatureCollection',
@@ -186,7 +185,7 @@ function _removeAnimRoute() {
   try { if (map.getSource('anim-route'))     map.removeSource('anim-route');     } catch (_) {}
 }
 
-// ── Catmull-Rom Spline – fließende Kamerabewegung ────────────────────────────
+// Catmull-Rom Spline – fließende Kamerabewegung
 
 /**
  * Interpoliert einen Punkt auf dem Catmull-Rom-Segment [p1 → p2]
@@ -319,7 +318,7 @@ function _hideLabel() {
   if (_labelEl) { _labelEl.style.opacity = '0'; }
 }
 
-// ── Tile-Vorladung ────────────────────────────────────────────────────────────
+// Tile-Vorladung
 
 /**
  * Lädt Kartenkacheln für die gesamte Route vorab, bevor die Animation beginnt.
@@ -354,7 +353,7 @@ async function _preloadTilesForRoute(pts, targetZoom = 6, samples = 35) {
   return true;
 }
 
-// ── Hauptfunktion ─────────────────────────────────────────────────────────────
+// Hauptfunktion
 async function playRouteAnimation(routeCode) {
   // Code-Auflösung: Parameter > globale Variable
   const code = String(routeCode !== undefined ? routeCode : window.ANIMATION_ROUTE);
@@ -392,13 +391,13 @@ async function playRouteAnimation(routeCode) {
 
   console.log(`[routeAnimation] Starte Animation: ${route.species} (Route ${route.displayCode}), ${pts.length} Punkte`);
 
-  // ── Setup ──────────────────────────────────────────────────────────────────
+  // Setup
   _hideUI();
   _dimOtherRoutes(route.code);   // Andere Routen abdunkeln, Symbole bleiben erhalten
   _showAnimRoute(route);
   _showRouteSymbols(route);      // ▲ und ✕ dauerhaft einblenden
 
-  // ── 0. Tiles vorab laden ───────────────────────────────────────────────────
+  // 0. Tiles vorab laden
   // Vor dem sichtbaren Animationsstart alle Kacheln der Route bei Zoom 6 laden,
   // damit die Kamera später ohne Nachladeruckler durchfliegen kann.
   _showLabel('Lade Kartendaten \u2026');
@@ -406,7 +405,7 @@ async function playRouteAnimation(routeCode) {
   _hideLabel();
   if (!tilesReady || _animAbort) { _cleanup(); return; }
 
-  // ── 1. Zurück auf Zoom 0 ──────────────────────────────────────────────────
+  // 1. Zurück auf Zoom 0
   map.flyTo({ zoom: 0, duration: 1200 / window.ANIMATION_SPEED, essential: true });
   await _waitForIdle();
   if (_animAbort) { _cleanup(); return; }
@@ -417,7 +416,7 @@ async function playRouteAnimation(routeCode) {
   // Einheitliche Segmentdauer für die gesamte Strecke (inkl. Anflug auf den Startpunkt)
   const segDuration = window.ANIMATION_SEGMENT_MS / window.ANIMATION_SPEED;
 
-  // ── 2. Zum Origin fahren – easeTo hält den Zoom konstant (kein Bogenkurven-Dip) ──
+  // 2. Zum Origin fahren – easeTo hält den Zoom konstant (kein Bogenkurven-Dip)
   await _easeTo({
     center:    [origin.lon, origin.lat],
     zoom:      6,
@@ -432,16 +431,16 @@ async function playRouteAnimation(routeCode) {
   await _wait(1000);
   if (_animAbort) { _cleanup(); return; }
 
-  // ── 3. Kontinuierliche Spline-Fahrt entlang der Route ────────────────────
+  // 3. Kontinuierliche Spline-Fahrt entlang der Route
   // Catmull-Rom-Kurve durch alle Wegpunkte – kein Stop, kein Zoom-Sprung.
   const totalRouteDuration = (pts.length - 1) * segDuration;
   const ok = await _animateSpline(pts, totalRouteDuration);
   if (!ok || _animAbort) { _cleanup(); return; }
 
-  // ── 4. Abschluss: auf letztem Punkt stehen bleiben ───────────────────────
+  // 4. Abschluss: auf letztem Punkt stehen bleiben
   await _wait(2000);
 
-  // ── 5. Aufräumen & alles zurücksetzen ────────────────────────────────────
+  // 5. Aufräumen & alles zurücksetzen
   _cleanup();
   console.log('[routeAnimation] Animation abgeschlossen.');
 }

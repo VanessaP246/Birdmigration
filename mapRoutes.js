@@ -1,9 +1,4 @@
-// Ganz oben – NICHT innerhalb von buildLayers() oder onMapReady()
 function getAvailableNames() {
-  // Der Sunburst erwartet die verfügbaren Namen basierend auf den aktuell
-  // sichtbaren Routen (d.h. unter Berücksichtigung aller aktiven Filter
-  // wie months, startMonth, sowie Year-Filter). Daher nutzen wir
-  // getVisibleRoutes() anstelle einer reinen Jahresfilter-Logik.
   try {
     const visible = typeof getVisibleRoutes === 'function' ? getVisibleRoutes() : allRoutes;
     return {
@@ -72,7 +67,7 @@ let mapReady     = false;
 // Option: Zwischenstopps ausblenden (nur Origin/Destination zeigen)
 let hideStops = false;
 // Für Hover-Symbole (Origin/Destination Hervorhebung)
-let hoveredRoute = null; // code der gehöverten Route
+let hoveredRoute = null; // code der gehoverten Route
 
 // Tooltips/Infobox
 // Hover-Tooltip (folgt der Maus)
@@ -311,7 +306,7 @@ function buildLayers() {
   } catch (e) {}
 }
 
-// Interaktion registrieren (nur einmal!)
+// Interaktion registrieren
 function registerInteraction() {
 
   // HOVER – Linie dicker + Hover-Tooltip zeigen
